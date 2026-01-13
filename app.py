@@ -2,6 +2,30 @@ import os
 from flask import Flask, render_template
 from flask_pymongo import PyMongo
 
+app = Flask(__name__)
+
+# MongoDB configuration
+app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
+app.secret_key = os.environ.get("SECRET_KEY")
+
+mongo = PyMongo(app)
+
+
+@app.route("/", methods=["GET", "POST"])
+@app.route("/get_tickets", methods=["GET", "POST"])
+def get_tickets():
+    cad_tickets = list(mongo.db.CADTickets.find())
+    return render_template("tickets.html", tickets=cad_tickets)
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+"""
+import os
+from flask import Flask, render_template
+from flask_pymongo import PyMongo
+
 if os.path.exists("env.py"):
     import env
 
@@ -35,7 +59,7 @@ if __name__ == "__main__":
         port=int(os.environ.get("PORT")),
         debug=True
     )
-
+"""
 """
 import os
 import pymongo
