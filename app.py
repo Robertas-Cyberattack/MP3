@@ -16,7 +16,13 @@ app.secret_key = os.environ.get("SECRET_KEY")
 mongo = PyMongo(app)
 
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
+@app.route("/get_tickets", methods=["GET", "POST"])
+def get_tickets():
+    cad_tickets = list(mongo.db.CADTickets.find())
+    return render_template("tickets.html", tickets=cad_tickets)
+
+
 @app.route("/get_tickets")
 def get_tickets():
     cad_tickets = mongo.db.CADTickets.find()
