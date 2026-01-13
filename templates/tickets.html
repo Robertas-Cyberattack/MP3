@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CAD Tickets</title>
+</head>
+<body>
+
+    {% for ticket in tickets %}
+        <p><strong>First:</strong> {{ ticket.first }}</p>
+        <p><strong>Last:</strong> {{ ticket.last }}</p>
+        <p><strong>Company:</strong> {{ ticket.company }}</p>
+        <p><strong>Status:</strong> {{ ticket.status }}</p>
+        <p><strong>Date:</strong> {{ ticket.date }}</p>
+        <p><strong>File:</strong> {{ ticket.file }}</p>
+        <p><strong>Progress:</strong> {{ ticket.progress }}</p>
+        <p><strong>Comments:</strong> {{ ticket.comments }}</p>
+        <p><strong>Client No:</strong> {{ ticket.clientno }}</p>
+        <hr>
+    {% endfor %}
+
+</body>
+</html>

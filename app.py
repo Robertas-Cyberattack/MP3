@@ -1,27 +1,34 @@
 import os
-from flask import Flask
+from flask import Flask, render_template
 from flask_pymongo import PyMongo
-from bson.objectid import ObjectId
+
 if os.path.exists("env.py"):
     import env
 
 
 app = Flask(__name__)
 
-app.config["MONGO_DBNAME"] = os.environ.get("MONGO_DBNAME")
+# MongoDB configuration
+app.config["MONGO_DBNAME"] = os.environ.get("CADDB")
 app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
 app.secret_key = os.environ.get("SECRET_KEY")
 
+mongo = PyMongo(app)
+
+
 @app.route("/")
-def hello():
-    return "Hello World ... again!"
+@app.route("/get_tickets")
+def get_tickets():
+    cad_tickets = mongo.db.CADTickets.find()
+    return render_template("tickets.html", tickets=cad_tickets)
 
 
 if __name__ == "__main__":
-    app.run(host=os.environ.get("IP"),
-            port=int(os.environ.get("PORT")),
-            debug=True)
-
+    app.run(
+        host=os.environ.get("IP"),
+        port=int(os.environ.get("PORT")),
+        debug=True
+    )
 
 """
 import os
