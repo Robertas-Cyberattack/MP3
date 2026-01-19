@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CAD Drafting Services</title>
+  <title>Construction drafting services for the UK and EU, based on British Standards and Eurocodes.</title>
 
   <!-- Materialize CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
@@ -12,8 +13,10 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css>">
+
 </head>
+
 <body>
 
   <!-- NAVBAR -->
@@ -29,7 +32,7 @@
         <li><a href="services.html">Services</a></li>
         <li><a href="projects.html">Projects</a></li>
         <li><a href="contact.html">Contact</a></li>
-        <li><a href="login.html">Login</a></li>
+        <li><a href="{{ url_for('login') }}">Login</a></li>
       </ul>
     </div>
   </nav>
@@ -41,7 +44,7 @@
     <li><a href="services.html">Services</a></li>
     <li><a href="projects.html">Projects</a></li>
     <li><a href="contact.html">Contact</a></li>
-    <li><a href="login.html">Login</a></li>
+    <li><a href="{{ url_for('login') }}">Login</a></li>
   </ul>
 
   <!-- HERO SECTION -->
@@ -49,6 +52,11 @@
     <h1>CAD Drafting Services</h1>
     <p>Professional 2D & 3D drafting solutions for your projects</p>
   </div>
+  <!-- PAGE CONTENT -->
+  <main class="container">
+    {% block content %}
+    {% endblock %}
+  </main>
 
   <!-- SERVICES CARDS -->
   <div class="section">
@@ -108,11 +116,12 @@
   <!-- Materialize JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       var elems = document.querySelectorAll('.sidenav');
       var instances = M.Sidenav.init(elems);
     });
   </script>
 
 </body>
+
 </html>

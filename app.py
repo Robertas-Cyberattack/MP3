@@ -2,7 +2,7 @@ import os
 from flask import Flask, render_template, redirect, request, session, url_for
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
-
+from werkzeug.security import generate_password_hash, check_password_hash
 if os.path.exists("env.py"):
     import env
 
@@ -41,6 +41,9 @@ def delete_ticket(ticket_id):
     mongo.db.CADTickets.delete_one({"_id": ObjectId(ticket_id)})
     return redirect(url_for("get_tickets"))
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    return render_template("login.html")
 
 if __name__ == "__main__":
     app.run(host=os.environ.get("IP"),
