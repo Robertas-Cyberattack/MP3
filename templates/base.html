@@ -24,15 +24,20 @@
       <a href="#" data-target="mobile-demo" class="sidenav-trigger">
         <i class="material-icons">menu</i>
       </a>
-      <ul class="right hide-on-med-and-down">
-        <li><a href="{{ url_for('get_tickets') }}">Home</a></li>
-        {% if not user %}
-          <li><a href="{{ url_for('login') }}">Login</a></li>
-          <li><a href="{{ url_for('register') }}">Register</a></li>
-        {% else %}
-          <li><a href="{{ url_for('logout') }}">Logout</a></li>
-        {% endif %}
-      </ul>
+<ul class="right hide-on-med-and-down">
+  <li><a href="{{ url_for('get_tickets') }}">Home</a></li>
+  <li><a href="{{ url_for('services') }}">Services</a></li>
+  <li><a href="{{ url_for('about') }}">About</a></li>
+  <li><a href="{{ url_for('contact') }}">Contact</a></li>
+
+  {% if not user %}
+    <li><a href="{{ url_for('login') }}">Login</a></li>
+    <li><a href="{{ url_for('register') }}">Register</a></li>
+  {% else %}
+    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+  {% endif %}
+</ul>
+
     </div>
   </nav>
 
