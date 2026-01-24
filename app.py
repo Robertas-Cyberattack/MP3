@@ -104,6 +104,17 @@ def logout():
     flash("You have been logged out")
     return redirect(url_for("login"))
 
+@app.route("/about")
+def about():
+    return render_template("about.html", user=session.get("user"))
+
+@app.route("/services")
+def services():
+    return render_template("services.html", user=session.get("user"))
+
+@app.route("/contact")
+def contact():
+    return render_template("contact.html", user=session.get("user"))
 
 # -------------------- RUN APP --------------------
 if __name__ == "__main__":
