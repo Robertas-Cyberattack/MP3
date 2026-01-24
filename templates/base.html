@@ -4,139 +4,75 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Construction drafting services for the UK and EU, based on British Standards and Eurocodes.</title>
+  <title>Cosmic Raccoon Drafting Club</title>
 
   <!-- Materialize CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css>">
-
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css">
 </head>
 
 <body>
 <header>
-    <!-- NAVBAR -->
-    <nav class="nav-extended text-shadow">
-      <div class="nav-wrapper">
-        <a href="{{ url_for('get_tickets') }}" class="brand-logo">Cosmic Raccoon Drafting Club</a>
-        <a href="#" data-target="mobile-demo" class="sidenav-trigger">
-          <i class="material-icons">menu</i>
-        </a>
-        <ul class="right hide-on-med-and-down">
-          <li><a href="{{ url_for('get_tickets') }}">Home</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="services.html">Services</a></li>
-          <li><a href="projects.html">Projects</a></li>
-          <li><a href="contact.html">Contact</a></li>
+  <!-- NAVBAR -->
+  <nav class="nav-extended blue darken-2">
+    <div class="nav-wrapper">
+      <a href="{{ url_for('get_tickets') }}" class="brand-logo">Cosmic Raccoon Drafting Club</a>
+      <a href="#" data-target="mobile-demo" class="sidenav-trigger">
+        <i class="material-icons">menu</i>
+      </a>
+      <ul class="right hide-on-med-and-down">
+        <li><a href="{{ url_for('get_tickets') }}">Home</a></li>
+        {% if not user %}
           <li><a href="{{ url_for('login') }}">Login</a></li>
-        </ul>
-      </div>
-    </nav>
+          <li><a href="{{ url_for('register') }}">Register</a></li>
+        {% else %}
+          <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </nav>
 
   <!-- Mobile menu -->
   <ul class="sidenav" id="mobile-demo">
     <li><a href="{{ url_for('get_tickets') }}">Home</a></li>
-    <li><a href="about.html">About</a></li>
-    <li><a href="services.html">Services</a></li>
-    <li><a href="projects.html">Projects</a></li>
-    <li><a href="contact.html">Contact</a></li>
-    <li><a href="{{ url_for('login') }}">Login</a></li>
+    {% if not user %}
+      <li><a href="{{ url_for('login') }}">Login</a></li>
+      <li><a href="{{ url_for('register') }}">Register</a></li>
+    {% else %}
+      <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    {% endif %}
   </ul>
 </header>
 
-  <!-- flash messages -->
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    {% for message in messages %}
-      <div class="row flashes">
-        <div class="card light-blue lighten-4 z-depth-2 animated fadeIn">
+<!-- FLASH MESSAGES -->
+<div class="container">
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for message in messages %}
+        <div class="card-panel teal lighten-4">
           {{ message }}
         </div>
-      </div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
 
+<!-- PAGE CONTENT -->
+<main class="container">
+  {% block content %}{% endblock %}
+</main>
 
-  <!-- HERO SECTION -->
-  <div class="section hero">
-    <h1>CAD Drafting Services</h1>
-    <p>Professional 2D & 3D drafting solutions for your projects</p>
-  </div>
-  <!-- PAGE CONTENT -->
-  <main class="container">
-    {% block content %}
-    {% endblock %}
-  </main>
-
-  <!-- SERVICES CARDS -->
-  <div class="section">
-    <div class="container">
-      <h4 class="center-align">Our Services</h4>
-      <div class="row">
-        <!-- Card example, repeat as needed -->
-        <div class="col s12 m6 l4">
-          <div class="card">
-            <div class="card-image">
-              <img src="placeholder1.jpg" alt="2D Drafting">
-              <span class="card-title">2D Drafting</span>
-            </div>
-            <div class="card-content">
-              <p>Accurate 2D drawings for architectural and engineering projects.</p>
-            </div>
-            <div class="card-action">
-              <a href="#">Learn More</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="col s12 m6 l4">
-          <div class="card">
-            <div class="card-image">
-              <img src="placeholder2.jpg" alt="3D Modeling">
-              <span class="card-title">3D Modeling</span>
-            </div>
-            <div class="card-content">
-              <p>Realistic 3D models for visualization and simulation purposes.</p>
-            </div>
-            <div class="card-action">
-              <a href="#">Learn More</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="col s12 m6 l4">
-          <div class="card">
-            <div class="card-image">
-              <img src="placeholder3.jpg" alt="BIM Drafting">
-              <span class="card-title">BIM Drafting</span>
-            </div>
-            <div class="card-content">
-              <p>Building Information Modeling for collaborative architectural workflows.</p>
-            </div>
-            <div class="card-action">
-              <a href="#">Learn More</a>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- Materialize JS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      var elems = document.querySelectorAll('.sidenav');
-      var instances = M.Sidenav.init(elems);
-    });
-  </script>
+<!-- Materialize JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var elems = document.querySelectorAll('.sidenav');
+  var instances = M.Sidenav.init(elems);
+});
+</script>
 
 </body>
-
 </html>
