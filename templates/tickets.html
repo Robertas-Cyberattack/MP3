@@ -1,15 +1,61 @@
 {% extends "base.html" %}
 {% block content %}
 
-    {% for ticket in tickets %}
-        {{ ticket.first }}<br>
-        {{ ticket.last }}<br>
-        {{ ticket.company }}<br>
-        {{ ticket.status }}<br>
-        {{ ticket.date }}<br>
-        {{ ticket.file }}<br>
-        {{ ticket.progress }}<br>
-        {{ ticket.comments }}<br>
-        {{ ticket.clientno }}<br>
-    {% endfor %}
+<div class="section">
+  <h4>Your Project Files</h4>
+  <p>Upload drawings, sketches, or reference files for drafting.</p>
+</div>
+
+{% if user %}
+<!-- UPLOAD FORM -->
+<div class="card">
+  <div class="card-content">
+    <span class="card-title">Upload new file</span>
+
+    <form method="POST" action="{{ url_for('add_ticket') }}" enctype="multipart/form-data">
+
+      <div class="input-field">
+        <input id="title" name="title" type="text" required>
+        <label for="title">Project title</label>
+      </div>
+
+      <div class="input-field">
+        <textarea id="description" name="description" class="materialize-textarea"></textarea>
+        <label for="description">Description</label>
+      </div>
+
+      <div class="file-field input-field">
+        <div class="btn blue">
+          <span>File</span>
+          <input type="file" name="file" required>
+        </div>
+        <div class="file-path-wrapper">
+          <input class="file-path validate" type="text" placeholder="Upload file">
+        </div>
+      </div>
+
+      <button class="btn green">Upload</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<!-- TICKETS LIST -->
+<div class="section">
+  <h5>Uploaded files</h5>
+
+  {% for ticket in tickets %}
+  <div class="card">
+    <div class="card-content">
+      <span class="card-title">{{ ticket.title }}</span>
+      <p>{{ ticket.description }}</p>
+      <p><strong>Status:</strong> {{ ticket.status }}</p>
+      <p><strong>Uploaded by:</strong> {{ ticket.author }}</p>
+    </div>
+  </div>
+  {% else %}
+    <p>No uploads yet.</p>
+  {% endfor %}
+</div>
+
 {% endblock %}
