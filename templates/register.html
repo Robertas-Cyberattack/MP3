@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row">
+  <form class="col s12 m6 offset-m3" method="POST">
+    <div class="card-panel teal">
+
+      <h5 class="center white-text">Register</h5>
+
+      <div class="input-field">
+        <i class="material-icons prefix">person</i>
+        <input name="username" type="text" required>
+        <label>Username</label>
+      </div>
+
+      <div class="input-field">
+        <i class="material-icons prefix">lock</i>
+        <input name="password" type="password" required>
+        <label>Password</label>
+      </div>
+
+      <button class="btn-large blue darken-4 col s12">Register</button>
+
+    </div>
+  </form>
+</div>
+
+{% endblock %}
