@@ -1,25 +1,32 @@
 {% extends "base.html" %}
 {% block content %}
 
-<!-- HERO -->
 <div class="hero">
   <h1>Cosmic Raccoon Drafting Club</h1>
-  <p>Upload drawings, manage CAD requests, and collaborate easily.</p>
+  <p>Professional construction drawings for UK & Europe</p>
 </div>
 
-<!-- ADD TICKET (LOGGED IN ONLY) -->
-{% if user %}
 <div class="section">
-  <h5>Create New Ticket</h5>
+  <h5>Client Portal</h5>
+  <p>
+    Submit drafting requests, upload drawings, and track progress.
+  </p>
+</div>
+
+{% if user %}
+<!-- ADD TICKET -->
+<div class="section">
+  <h5>Create New Request</h5>
+
   <form method="POST" action="{{ url_for('add_ticket') }}">
     <div class="input-field">
-      <input id="title" name="title" type="text" required>
-      <label for="title">Project title</label>
+      <input name="title" type="text" required>
+      <label>Project Title</label>
     </div>
 
     <div class="input-field">
-      <textarea id="description" name="description" class="materialize-textarea" required></textarea>
-      <label for="description">Description</label>
+      <textarea name="description" class="materialize-textarea" required></textarea>
+      <label>Project Description</label>
     </div>
 
     <div class="input-field">
@@ -31,19 +38,16 @@
       <label>Status</label>
     </div>
 
-    <button class="btn blue darken-2">Create Ticket</button>
+    <button class="btn blue darken-2">Submit Request</button>
   </form>
 </div>
 {% else %}
-<div class="section center">
-  <p><strong>Please login or register to create tickets.</strong></p>
-</div>
+<p><strong>Please login or register to submit a request.</strong></p>
 {% endif %}
 
-<!-- TICKETS LIST -->
+<!-- TICKETS -->
 <div class="section">
-  <h5>Tickets</h5>
-
+  <h5>Requests</h5>
   <div class="row">
     {% for ticket in tickets %}
     <div class="col s12 m6 l4">
@@ -52,13 +56,14 @@
           <span class="card-title">{{ ticket.title }}</span>
           <p>{{ ticket.description }}</p>
           <p><strong>Status:</strong> {{ ticket.status }}</p>
-          <p><small>By {{ ticket.author }}</small></p>
+          <small>By {{ ticket.author }}</small>
         </div>
 
         {% if user == ticket.author %}
         <div class="card-action">
-          <a href="{{ url_for('delete_ticket', ticket_id=ticket._id) }}"
-             class="red-text">Delete</a>
+          <a href="{{ url_for('delete_ticket', ticket_id=ticket._id) }}" class="red-text">
+            Delete
+          </a>
         </div>
         {% endif %}
       </div>
@@ -69,8 +74,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  var elems = document.querySelectorAll('select');
-  M.FormSelect.init(elems);
+  M.FormSelect.init(document.querySelectorAll('select'));
 });
 </script>
 
