@@ -1,61 +1,77 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="section">
-  <h4>Your Project Files</h4>
-  <p>Upload drawings, sketches, or reference files for drafting.</p>
+<!-- HERO -->
+<div class="hero">
+  <h1>Cosmic Raccoon Drafting Club</h1>
+  <p>Upload drawings, manage CAD requests, and collaborate easily.</p>
 </div>
 
+<!-- ADD TICKET (LOGGED IN ONLY) -->
 {% if user %}
-<!-- UPLOAD FORM -->
-<div class="card">
-  <div class="card-content">
-    <span class="card-title">Upload new file</span>
+<div class="section">
+  <h5>Create New Ticket</h5>
+  <form method="POST" action="{{ url_for('add_ticket') }}">
+    <div class="input-field">
+      <input id="title" name="title" type="text" required>
+      <label for="title">Project title</label>
+    </div>
 
-    <form method="POST" action="{{ url_for('add_ticket') }}" enctype="multipart/form-data">
+    <div class="input-field">
+      <textarea id="description" name="description" class="materialize-textarea" required></textarea>
+      <label for="description">Description</label>
+    </div>
 
-      <div class="input-field">
-        <input id="title" name="title" type="text" required>
-        <label for="title">Project title</label>
-      </div>
+    <div class="input-field">
+      <select name="status">
+        <option value="New" selected>New</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Completed">Completed</option>
+      </select>
+      <label>Status</label>
+    </div>
 
-      <div class="input-field">
-        <textarea id="description" name="description" class="materialize-textarea"></textarea>
-        <label for="description">Description</label>
-      </div>
-
-      <div class="file-field input-field">
-        <div class="btn blue">
-          <span>File</span>
-          <input type="file" name="file" required>
-        </div>
-        <div class="file-path-wrapper">
-          <input class="file-path validate" type="text" placeholder="Upload file">
-        </div>
-      </div>
-
-      <button class="btn green">Upload</button>
-    </form>
-  </div>
+    <button class="btn blue darken-2">Create Ticket</button>
+  </form>
+</div>
+{% else %}
+<div class="section center">
+  <p><strong>Please login or register to create tickets.</strong></p>
 </div>
 {% endif %}
 
 <!-- TICKETS LIST -->
 <div class="section">
-  <h5>Uploaded files</h5>
+  <h5>Tickets</h5>
 
-  {% for ticket in tickets %}
-  <div class="card">
-    <div class="card-content">
-      <span class="card-title">{{ ticket.title }}</span>
-      <p>{{ ticket.description }}</p>
-      <p><strong>Status:</strong> {{ ticket.status }}</p>
-      <p><strong>Uploaded by:</strong> {{ ticket.author }}</p>
+  <div class="row">
+    {% for ticket in tickets %}
+    <div class="col s12 m6 l4">
+      <div class="card">
+        <div class="card-content">
+          <span class="card-title">{{ ticket.title }}</span>
+          <p>{{ ticket.description }}</p>
+          <p><strong>Status:</strong> {{ ticket.status }}</p>
+          <p><small>By {{ ticket.author }}</small></p>
+        </div>
+
+        {% if user == ticket.author %}
+        <div class="card-action">
+          <a href="{{ url_for('delete_ticket', ticket_id=ticket._id) }}"
+             class="red-text">Delete</a>
+        </div>
+        {% endif %}
+      </div>
     </div>
+    {% endfor %}
   </div>
-  {% else %}
-    <p>No uploads yet.</p>
-  {% endfor %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var elems = document.querySelectorAll('select');
+  M.FormSelect.init(elems);
+});
+</script>
 
 {% endblock %}
