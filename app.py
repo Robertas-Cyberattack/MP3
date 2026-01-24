@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, redirect, request, session, url_for
+from flask import Flask, render_template, redirect, request, session, url_for, flash
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -40,9 +40,26 @@ def add_ticket():
 def delete_ticket(ticket_id):
     mongo.db.CADTickets.delete_one({"_id": ObjectId(ticket_id)})
     return redirect(url_for("get_tickets"))
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == "POST":
+        # confirming if username exists
+        existing_user = mongo.db.user.find_one(
+            {"username": request.form.get("username").lower()})
+        
+        if existing_user:
+            flash("Username name is occupied")
+            return redirect(url_for("login"))
+        
+        login = {
+            "username": request.form.get("username").lower(),
+            "password": generate_password_hash(request.form.get("password"))
+        }
+        mongo.db.users.insert_one(login)
+
+        session["user"] = request.form.get("username").lower()
+        flash("Registration Successful!")        
+
     return render_template("login.html")
 
 if __name__ == "__main__":

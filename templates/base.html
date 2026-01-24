@@ -18,24 +18,24 @@
 </head>
 
 <body>
-
-  <!-- NAVBAR -->
-  <nav>
-    <div class="nav-wrapper">
-      <a href="{{ url_for('get_tickets') }}" class="brand-logo">Cosmic Raccoon Drafting Club</a>
-      <a href="#" data-target="mobile-demo" class="sidenav-trigger">
-        <i class="material-icons">menu</i>
-      </a>
-      <ul class="right hide-on-med-and-down">
-        <li><a href="{{ url_for('get_tickets') }}">Home</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="services.html">Services</a></li>
-        <li><a href="projects.html">Projects</a></li>
-        <li><a href="contact.html">Contact</a></li>
-        <li><a href="{{ url_for('login') }}">Login</a></li>
-      </ul>
-    </div>
-  </nav>
+<header>
+    <!-- NAVBAR -->
+    <nav class="nav-extended text-shadow">
+      <div class="nav-wrapper">
+        <a href="{{ url_for('get_tickets') }}" class="brand-logo">Cosmic Raccoon Drafting Club</a>
+        <a href="#" data-target="mobile-demo" class="sidenav-trigger">
+          <i class="material-icons">menu</i>
+        </a>
+        <ul class="right hide-on-med-and-down">
+          <li><a href="{{ url_for('get_tickets') }}">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="services.html">Services</a></li>
+          <li><a href="projects.html">Projects</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="{{ url_for('login') }}">Login</a></li>
+        </ul>
+      </div>
+    </nav>
 
   <!-- Mobile menu -->
   <ul class="sidenav" id="mobile-demo">
@@ -46,6 +46,16 @@
     <li><a href="contact.html">Contact</a></li>
     <li><a href="{{ url_for('login') }}">Login</a></li>
   </ul>
+</header>
+
+  <!-- flash messages -->
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  {% for message in messages %}
+  <div class="row flashes"></div>
+  <div class="card light-blue lighten-4 z-depth-2 animated fadeIn">{{ message }}</h4>
+  {% endwith %}
+
 
   <!-- HERO SECTION -->
   <div class="section hero">
