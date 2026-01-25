@@ -1,7 +1,6 @@
 import os
 from flask import Flask, render_template, redirect, request, session, url_for, flash
 from flask_pymongo import PyMongo
-from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 
 if os.path.exists("env.py"):
@@ -16,44 +15,19 @@ app.secret_key = os.environ.get("SECRET_KEY")
 
 mongo = PyMongo(app)
 
-
-# -------------------- HOME / TICKETS --------------------
+# -------------------- HOME --------------------
 @app.route("/")
-@app.route("/tickets")
-def get_tickets():
-    tickets = mongo.db.CADTickets.find()
-    return render_template("tickets.html", tickets=tickets, user=session.get("user"))
-
-
-# -------------------- ADD TICKET --------------------
-@app.route("/add_ticket", methods=["POST"])
-def add_ticket():
-    if "user" not in session:
-        flash("Please login first!")
-        return redirect(url_for("login"))
-
-    ticket = {
-        "title": request.form.get("title"),
-        "description": request.form.get("description"),
-        "status": request.form.get("status"),
-        "author": session["user"]
-    }
-    mongo.db.CADTickets.insert_one(ticket)
-    flash("Ticket added successfully!")
-    return redirect(url_for("get_tickets"))
-
-
-# -------------------- DELETE TICKET --------------------
-@app.route("/delete_ticket/<ticket_id>")
-def delete_ticket(ticket_id):
-    if "user" not in session:
-        flash("Please login first!")
-        return redirect(url_for("login"))
-
-    mongo.db.CADTickets.delete_one({"_id": ObjectId(ticket_id)})
-    flash("Ticket deleted!")
-    return redirect(url_for("get_tickets"))
-
+def home():
+    # 6 sample projects
+    projects = [
+        {"title": "Residential Apartment Design", "description": "Complete CAD drafting for a modern apartment complex in London, following British Building Codes.", "image": "project1.jpg"},
+        {"title": "Commercial Office Renovation", "description": "Detailed construction drawings for office space in Manchester, ensuring compliance with UK and Eurocodes.", "image": "project2.jpg"},
+        {"title": "Industrial Warehouse Layout", "description": "Efficient CAD plans for a warehouse in Birmingham, including structural and MEP integration.", "image": "project3.jpg"},
+        {"title": "Bridge Engineering Project", "description": "Structural and civil engineering drawings for a bridge design, following Eurocode standards.", "image": "project4.jpg"},
+        {"title": "Retail Store Interior Design", "description": "Professional CAD drafting for a chain of retail stores across Europe.", "image": "project5.jpg"},
+        {"title": "Luxury Villa Development", "description": "Residential luxury villa construction drawings, tailored to British standards.", "image": "project6.jpg"},
+    ]
+    return render_template("home.html", projects=projects, user=session.get("user"))
 
 # -------------------- REGISTER --------------------
 @app.route("/register", methods=["GET", "POST"])
@@ -61,22 +35,23 @@ def register():
     if request.method == "POST":
         username = request.form.get("username").lower()
         password = request.form.get("password")
+        email = request.form.get("email")
+        phone = request.form.get("phone")
 
-        existing_user = mongo.db.users.find_one({"username": username})
-        if existing_user:
+        if mongo.db.users.find_one({"username": username}):
             flash("Username already exists")
             return redirect(url_for("register"))
 
         mongo.db.users.insert_one({
             "username": username,
-            "password": generate_password_hash(password)
+            "password": generate_password_hash(password),
+            "email": email,
+            "phone": phone
         })
         session["user"] = username
         flash("Registration successful!")
-        return redirect(url_for("get_tickets"))
-
+        return redirect(url_for("home"))
     return render_template("register.html")
-
 
 # -------------------- LOGIN --------------------
 @app.route("/login", methods=["GET", "POST"])
@@ -84,18 +59,16 @@ def login():
     if request.method == "POST":
         username = request.form.get("username").lower()
         password = request.form.get("password")
-
         user = mongo.db.users.find_one({"username": username})
+
         if user and check_password_hash(user["password"], password):
             session["user"] = username
             flash(f"Welcome back, {username}!")
-            return redirect(url_for("get_tickets"))
-        else:
-            flash("Incorrect username or password")
-            return redirect(url_for("login"))
+            return redirect(url_for("home"))
+        flash("Incorrect username or password")
+        return redirect(url_for("login"))
 
     return render_template("login.html")
-
 
 # -------------------- LOGOUT --------------------
 @app.route("/logout")
@@ -104,14 +77,25 @@ def logout():
     flash("You have been logged out")
     return redirect(url_for("login"))
 
+# -------------------- ABOUT --------------------
 @app.route("/about")
 def about():
     return render_template("about.html", user=session.get("user"))
 
+# -------------------- SERVICES --------------------
 @app.route("/services")
 def services():
-    return render_template("services.html", user=session.get("user"))
+    services = [
+        "CAD drafting for residential and commercial buildings",
+        "Structural drawings and compliance with Eurocodes",
+        "Civil engineering designs for infrastructure projects",
+        "Interior layout plans for offices and retail spaces",
+        "MEP integration and coordination drawings",
+        "Construction documentation for UK and EU projects"
+    ]
+    return render_template("services.html", services=services, user=session.get("user"))
 
+# -------------------- CONTACT --------------------
 @app.route("/contact")
 def contact():
     return render_template("contact.html", user=session.get("user"))
