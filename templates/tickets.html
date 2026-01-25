@@ -3,79 +3,43 @@
 
 <div class="hero">
   <h1>Cosmic Raccoon Drafting Club</h1>
-  <p>Professional construction drawings for UK & Europe</p>
+  <p>Expert CAD drafting and construction drawings for UK & Europe<br>All work follows British & Eurocode standards</p>
 </div>
 
 <div class="section">
-  <h5>Client Portal</h5>
+  <h4>About Our Team</h4>
   <p>
-    Submit drafting requests, upload drawings, and track progress.
+    Our drafters hold at least a Bachelor's degree in Civil Engineering from accredited UK universities and have extensive experience in residential, commercial, and infrastructure projects. 
+    We provide precise, professional construction documentation, CAD drawings, and compliance checks for projects across the UK and Europe.
   </p>
 </div>
 
-{% if user %}
-<!-- ADD TICKET -->
 <div class="section">
-  <h5>Create New Request</h5>
-
-  <form method="POST" action="{{ url_for('add_ticket') }}">
-    <div class="input-field">
-      <input name="title" type="text" required>
-      <label>Project Title</label>
-    </div>
-
-    <div class="input-field">
-      <textarea name="description" class="materialize-textarea" required></textarea>
-      <label>Project Description</label>
-    </div>
-
-    <div class="input-field">
-      <select name="status">
-        <option value="New" selected>New</option>
-        <option value="In Progress">In Progress</option>
-        <option value="Completed">Completed</option>
-      </select>
-      <label>Status</label>
-    </div>
-
-    <button class="btn blue darken-2">Submit Request</button>
-  </form>
-</div>
-{% else %}
-<p><strong>Please login or register to submit a request.</strong></p>
-{% endif %}
-
-<!-- TICKETS -->
-<div class="section">
-  <h5>Requests</h5>
+  <h4>Our Projects</h4>
   <div class="row">
-    {% for ticket in tickets %}
+    {% set projects = [
+        {"title":"Residential Apartment Design","description":"Complete CAD drafting for a modern apartment complex in London, following British Building Codes.","image":"project1.jpg"},
+        {"title":"Commercial Office Renovation","description":"Detailed construction drawings for office space in Manchester, ensuring compliance with UK and Eurocodes.","image":"project2.jpg"},
+        {"title":"Industrial Warehouse Layout","description":"Efficient CAD plans for a warehouse in Birmingham, including structural and MEP integration.","image":"project3.jpg"},
+        {"title":"Bridge Engineering Project","description":"Structural and civil engineering drawings for a bridge design, following Eurocode standards.","image":"project4.jpg"},
+        {"title":"Retail Store Interior Design","description":"Professional CAD drafting for a chain of retail stores across Europe.","image":"project5.jpg"},
+        {"title":"Luxury Villa Development","description":"Residential luxury villa construction drawings, tailored to British standards.","image":"project6.jpg"}
+    ] %}
+    
+    {% for project in projects %}
     <div class="col s12 m6 l4">
       <div class="card">
+        <div class="card-image">
+          <img src="{{ url_for('static', filename='images/' ~ project.image) }}" alt="{{ project.title }}">
+        </div>
         <div class="card-content">
-          <span class="card-title">{{ ticket.title }}</span>
-          <p>{{ ticket.description }}</p>
-          <p><strong>Status:</strong> {{ ticket.status }}</p>
-          <small>By {{ ticket.author }}</small>
+          <span class="card-title">{{ project.title }}</span>
+          <p>{{ project.description }}</p>
         </div>
-
-        {% if user == ticket.author %}
-        <div class="card-action">
-          <a href="{{ url_for('delete_ticket', ticket_id=ticket._id) }}" class="red-text">
-            Delete
-          </a>
-        </div>
-        {% endif %}
       </div>
     </div>
     {% endfor %}
   </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  M.FormSelect.init(document.querySelectorAll('select'));
-});
-</script>
 
 {% endblock %}
