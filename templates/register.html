@@ -2,10 +2,9 @@
 {% block content %}
 
 <div class="row">
-  <form class="col s12 m6 offset-m3" method="POST">
-    <div class="card-panel teal">
-
-      <h5 class="center white-text">Register</h5>
+  <form class="col s12 m6 offset-m3" method="POST" action="{{ url_for('register') }}">
+    <div class="card-panel blue lighten-5">
+      <h5 class="center blue-text text-darken-4">Register</h5>
 
       <div class="input-field">
         <i class="material-icons prefix">person</i>
@@ -14,13 +13,24 @@
       </div>
 
       <div class="input-field">
+        <i class="material-icons prefix">email</i>
+        <input name="email" type="email" required>
+        <label>Email</label>
+      </div>
+
+      <div class="input-field">
+        <i class="material-icons prefix">phone</i>
+        <input name="phone" type="text">
+        <label>Phone</label>
+      </div>
+
+      <div class="input-field">
         <i class="material-icons prefix">lock</i>
         <input name="password" type="password" required>
         <label>Password</label>
       </div>
 
-      <button class="btn-large blue darken-4 col s12">Register</button>
-
+      <button class="btn blue darken-2 col s12">Register</button>
     </div>
   </form>
 </div>
