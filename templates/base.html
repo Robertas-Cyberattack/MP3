@@ -1,49 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Construction drawings – UK & Europe</title>
-
-
+  <title>Cosmic Raccoon Drafting Club</title>
   <!-- Materialize CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-  <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body>
 <header>
-  <!-- NAVBAR -->
   <nav class="nav-extended blue darken-2">
-    <div class="nav-wrapper">
-      <a href="{{ url_for('get_tickets') }}" class="brand-logo">Cosmic Raccoon Drafting Club</a>
+    <div class="nav-wrapper container">
+      <a href="{{ url_for('home') }}" class="brand-logo">Cosmic Raccoon Drafting Club</a>
       <a href="#" data-target="mobile-demo" class="sidenav-trigger">
         <i class="material-icons">menu</i>
       </a>
-<ul class="right hide-on-med-and-down">
-  <li><a href="{{ url_for('get_tickets') }}">Home</a></li>
-  <li><a href="{{ url_for('services') }}">Services</a></li>
-  <li><a href="{{ url_for('about') }}">About</a></li>
-  <li><a href="{{ url_for('contact') }}">Contact</a></li>
-
-  {% if not user %}
-    <li><a href="{{ url_for('login') }}">Login</a></li>
-    <li><a href="{{ url_for('register') }}">Register</a></li>
-  {% else %}
-    <li><a href="{{ url_for('logout') }}">Logout</a></li>
-  {% endif %}
-</ul>
-
+      <ul class="right hide-on-med-and-down">
+        <li><a href="{{ url_for('home') }}">Home</a></li>
+        <li><a href="{{ url_for('services') }}">Services</a></li>
+        <li><a href="{{ url_for('about') }}">About</a></li>
+        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+        {% if not user %}
+          <li><a href="{{ url_for('login') }}">Login</a></li>
+          <li><a href="{{ url_for('register') }}">Register</a></li>
+        {% else %}
+          <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        {% endif %}
+      </ul>
     </div>
   </nav>
-
-  <!-- Mobile menu -->
   <ul class="sidenav" id="mobile-demo">
-    <li><a href="{{ url_for('get_tickets') }}">Home</a></li>
+    <li><a href="{{ url_for('home') }}">Home</a></li>
+    <li><a href="{{ url_for('services') }}">Services</a></li>
+    <li><a href="{{ url_for('about') }}">About</a></li>
+    <li><a href="{{ url_for('contact') }}">Contact</a></li>
     {% if not user %}
       <li><a href="{{ url_for('login') }}">Login</a></li>
       <li><a href="{{ url_for('register') }}">Register</a></li>
@@ -53,32 +45,30 @@
   </ul>
 </header>
 
-<!-- FLASH MESSAGES -->
 <div class="container">
   {% with messages = get_flashed_messages() %}
     {% if messages %}
       {% for message in messages %}
-        <div class="card-panel teal lighten-4">
-          {{ message }}
-        </div>
+        <div class="card-panel teal lighten-4">{{ message }}</div>
       {% endfor %}
     {% endif %}
   {% endwith %}
 </div>
 
-<!-- PAGE CONTENT -->
 <main class="container">
   {% block content %}{% endblock %}
 </main>
 
-<!-- Materialize JS -->
+<footer>
+  &copy; 2026 Cosmic Raccoon Drafting Club. All rights reserved.
+</footer>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   var elems = document.querySelectorAll('.sidenav');
-  var instances = M.Sidenav.init(elems);
+  M.Sidenav.init(elems);
 });
 </script>
-
 </body>
 </html>
