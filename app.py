@@ -18,18 +18,62 @@ mongo = PyMongo(app)
 # -------------------- HOME --------------------
 @app.route("/")
 def home():
-    # 6 sample projects
-    projects = [
-        {"title": "Residential Apartment Design", "description": "Complete CAD drafting for a modern apartment complex in London, following British Building Codes.", "image": "project1.jpg"},
-        {"title": "Commercial Office Renovation", "description": "Detailed construction drawings for office space in Manchester, ensuring compliance with UK and Eurocodes.", "image": "project2.jpg"},
-        {"title": "Industrial Warehouse Layout", "description": "Efficient CAD plans for a warehouse in Birmingham, including structural and MEP integration.", "image": "project3.jpg"},
-        {"title": "Bridge Engineering Project", "description": "Structural and civil engineering drawings for a bridge design, following Eurocode standards.", "image": "project4.jpg"},
-        {"title": "Retail Store Interior Design", "description": "Professional CAD drafting for a chain of retail stores across Europe.", "image": "project5.jpg"},
-        {"title": "Luxury Villa Development", "description": "Residential luxury villa construction drawings, tailored to British standards.", "image": "project6.jpg"},
+    """
+    Landing page: informacija apie įmonę, veiklą ir misiją.
+    Projektai dabar rodomi tik /projects puslapyje.
+    """
+    landing_content = {
+        "company_name": "Precision Drafting & Engineering",
+        "hero_text": "Expert CAD drafting and construction drawings for UK & Europe. All work follows British & Eurocode standards.",
+        "sections": [
+            {
+                "title": "About Our Team",
+                "text": (
+                    "Our drafters hold at least a Bachelor's degree in Civil Engineering from accredited UK universities and have extensive experience "
+                    "in residential, commercial, and infrastructure projects. We provide precise, professional construction documentation, "
+                    "CAD drawings, and compliance checks for projects across the UK and Europe."
+                ),
+                "image": "placeholder.jpg",
+                "image_alt": "Our Team or Office"
+            },
+            {
+                "title": "Our Expertise",
+                "text": (
+                    "We specialize in CAD drafting, structural designs, MEP coordination, interior layouts, and construction documentation. "
+                    "Every project is executed with attention to detail, ensuring compliance with British Building Codes and Eurocodes."
+                ),
+                "image": "placeholder.jpg",
+                "image_alt": "Project Illustration"
+            },
+            {
+                "title": "Our Mission",
+                "text": (
+                    "Our mission is to deliver high-quality, professional drafting and engineering services to clients across the UK and Europe, "
+                    "helping them realize their projects efficiently and accurately."
+                ),
+                "image": "placeholder.jpg",
+                "image_alt": "Mission Illustration"
+            }
+        ]
+    }
+
+    return render_template("home.html", landing=landing_content, user=session.get("user"))
+
+# -------------------- PROJECTS --------------------
+@app.route("/projects")
+def projects():
+    projects_list = [
+        {"title":"Residential Apartment Design","description":"Complete CAD drafting for a modern apartment complex in London, following British Building Codes.","image":"project1.jpg"},
+        {"title":"Commercial Office Renovation","description":"Detailed construction drawings for office space in Manchester, ensuring compliance with UK and Eurocodes.","image":"project2.jpg"},
+        {"title":"Industrial Warehouse Layout","description":"Efficient CAD plans for a warehouse in Birmingham, including structural and MEP integration.","image":"project3.jpg"},
+        {"title":"Bridge Engineering Project","description":"Structural and civil engineering drawings for a bridge design, following Eurocode standards.","image":"project4.jpg"},
+        {"title":"Retail Store Interior Design","description":"Professional CAD drafting for a chain of retail stores across Europe.","image":"project5.jpg"},
+        {"title":"Luxury Villa Development","description":"Residential luxury villa construction drawings, tailored to British standards.","image":"project6.jpg"},
     ]
-    return render_template("home.html", projects=projects, user=session.get("user"))
+    return render_template("projects.html", projects=projects_list, user=session.get("user"))
 
 # -------------------- REGISTER --------------------
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
