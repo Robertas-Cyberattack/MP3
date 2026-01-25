@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="hero">
+  <h1>Our Services</h1>
+  <p>Comprehensive CAD drafting, structural designs, and construction documentation across the UK & Europe.</p>
+</div>
+
+<div class="section">
+  <h4>What We Offer</h4>
+  <div class="row">
+    {% for service in services %}
+    <div class="col s12 m6">
+      <div class="card blue lighten-5">
+        <div class="card-content">
+          <i class="material-icons left">check_circle</i>
+          <span>{{ service }}</span>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}
