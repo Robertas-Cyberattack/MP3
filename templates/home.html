@@ -2,44 +2,45 @@
 {% block content %}
 
 <div class="hero">
-  <h1>Cosmic Raccoon Drafting Club</h1>
+  <h1>Precision Drafting & Engineering</h1>
   <p>Expert CAD drafting and construction drawings for UK & Europe<br>All work follows British & Eurocode standards</p>
 </div>
 
 <div class="section">
   <h4>About Our Team</h4>
   <p>
-    Our drafters hold at least a Bachelor's degree in Civil Engineering from accredited UK universities and have extensive experience in residential, commercial, and infrastructure projects. 
+    Our drafters hold at least a Bachelor's degree in Civil Engineering from accredited UK universities and have extensive experience in residential, commercial, and infrastructure projects.
     We provide precise, professional construction documentation, CAD drawings, and compliance checks for projects across the UK and Europe.
   </p>
+  <div style="text-align: center; margin-top: 20px;">
+    <img src="{{ url_for('static', filename='images/placeholder.jpg') }}" alt="Our Team or Office" style="max-width:100%;height:auto;border-radius:8px;">
+  </div>
 </div>
 
 <div class="section">
-  <h4>Our Projects</h4>
-  <div class="row">
-    {% set projects = [
-        {"title":"Residential Apartment Design","description":"Complete CAD drafting for a modern apartment complex in London, following British Building Codes.","image":"project1.jpg"},
-        {"title":"Commercial Office Renovation","description":"Detailed construction drawings for office space in Manchester, ensuring compliance with UK and Eurocodes.","image":"project2.jpg"},
-        {"title":"Industrial Warehouse Layout","description":"Efficient CAD plans for a warehouse in Birmingham, including structural and MEP integration.","image":"project3.jpg"},
-        {"title":"Bridge Engineering Project","description":"Structural and civil engineering drawings for a bridge design, following Eurocode standards.","image":"project4.jpg"},
-        {"title":"Retail Store Interior Design","description":"Professional CAD drafting for a chain of retail stores across Europe.","image":"project5.jpg"},
-        {"title":"Luxury Villa Development","description":"Residential luxury villa construction drawings, tailored to British standards.","image":"project6.jpg"}
-    ] %}
-    
-    {% for project in projects %}
-    <div class="col s12 m6 l4">
-      <div class="card">
-        <div class="card-image">
-          <img src="{{ url_for('static', filename='images/' ~ project.image) }}" alt="{{ project.title }}">
-        </div>
-        <div class="card-content">
-          <span class="card-title">{{ project.title }}</span>
-          <p>{{ project.description }}</p>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
+  <h4>Our Expertise</h4>
+  <p>
+    We specialize in CAD drafting, structural designs, MEP coordination, interior layouts, and construction documentation.
+    Every project is executed with attention to detail, ensuring compliance with British Building Codes and Eurocodes.
+  </p>
+  <div style="text-align: center; margin-top: 20px;">
+    <img src="{{ url_for('static', filename='images/placeholder.jpg') }}" alt="Project Illustration" style="max-width:100%;height:auto;border-radius:8px;">
   </div>
+</div>
+
+<div class="section">
+  <h4>Our Mission</h4>
+  <p>
+    Our mission is to deliver high-quality, professional drafting and engineering services to clients across the UK and Europe,
+    helping them realize their projects efficiently and accurately.
+  </p>
+  <div style="text-align: center; margin-top: 20px;">
+    <img src="{{ url_for('static', filename='images/placeholder.jpg') }}" alt="Mission Illustration" style="max-width:100%;height:auto;border-radius:8px;">
+  </div>
+</div>
+
+<div class="section" style="text-align: center; margin-top: 40px;">
+  <a href="{{ url_for('projects') }}" class="btn blue darken-2">View Our Projects</a>
 </div>
 
 {% endblock %}
