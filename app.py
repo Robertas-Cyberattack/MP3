@@ -17,7 +17,7 @@ mongo = PyMongo(app)
 
 # -------------------- HOME --------------------
 @app.route("/")
-def home():
+def tickets():
     # 6 sample projects
     projects = [
         {"title": "Residential Apartment Design", "description": "Complete CAD drafting for a modern apartment complex in London, following British Building Codes.", "image": "project1.jpg"},
