@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="hero">
+  <h1>Contact Us</h1>
+  <p>Get in touch for project inquiries or consultations.</p>
+</div>
+
+<div class="section">
+  <div class="row">
+    <form class="col s12 m6 offset-m3" method="POST" action="#">
+      <div class="card-panel blue lighten-5">
+        <h5>Send Us a Message</h5>
+
+        <div class="input-field">
+          <input id="name" type="text" required>
+          <label for="name">Your Name</label>
+        </div>
+
+        <div class="input-field">
+          <input id="email" type="email" required>
+          <label for="email">Email</label>
+        </div>
+
+        <div class="input-field">
+          <input id="phone" type="text">
+          <label for="phone">Phone</label>
+        </div>
+
+        <div class="input-field">
+          <textarea id="message" class="materialize-textarea" required></textarea>
+          <label for="message">Message</label>
+        </div>
+
+        <button class="btn blue darken-2 col s12">Send Message</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
