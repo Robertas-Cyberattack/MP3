@@ -2,8 +2,10 @@ import os
 from flask import Flask, render_template, redirect, request, session, url_for, flash
 from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+from bson.objectid import ObjectId
 
-# Load env.py if present (local development)
+# Load env variables
 if os.path.exists("env.py"):
     import env
 
@@ -13,6 +15,10 @@ app = Flask(__name__)
 app.config["MONGO_DBNAME"] = os.environ.get("MONGO_DBNAME")
 app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
 app.secret_key = os.environ.get("SECRET_KEY")
+
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 mongo = PyMongo(app)
 
@@ -30,12 +36,10 @@ def register():
         email = request.form.get("email")
         phone = request.form.get("phone")
 
-        # Check if user already exists
         if mongo.db.users.find_one({"username": username}):
             flash("Username already exists")
             return redirect(url_for("register"))
 
-        # Create CLIENT user
         mongo.db.users.insert_one({
             "username": username,
             "password": generate_password_hash(password),
@@ -65,13 +69,9 @@ def login():
             session["user"] = username
             session["role"] = user["role"]
 
-            flash(f"Welcome back, {username}")
-
-            # Redirect based on role
             if user["role"] == "admin":
                 return redirect(url_for("admin_dashboard"))
-            else:
-                return redirect(url_for("dashboard"))
+            return redirect(url_for("dashboard"))
 
         flash("Invalid username or password")
         return redirect(url_for("login"))
@@ -82,7 +82,7 @@ def login():
 @app.route("/logout")
 def logout():
     session.clear()
-    flash("You have been logged out")
+    flash("Logged out")
     return redirect(url_for("login"))
 
 # -------------------- CLIENT DASHBOARD --------------------
@@ -94,6 +94,34 @@ def dashboard():
     orders = mongo.db.orders.find({"client": session["user"]})
     return render_template("dashboard.html", orders=orders, user=session.get("user"))
 
+# ======================================================
+# STEP 3 — FILE UPLOAD + ORDER CREATION
+# ======================================================
+
+@app.route("/upload", methods=["POST"])
+def upload_order():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    file = request.files.get("file")
+
+    if not file or file.filename == "":
+        flash("No file selected")
+        return redirect(url_for("dashboard"))
+
+    filename = secure_filename(file.filename)
+    file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+
+    mongo.db.orders.insert_one({
+        "client": session["user"],
+        "files": [filename],
+        "status": "Received",
+        "progress": 0
+    })
+
+    flash("Order uploaded successfully")
+    return redirect(url_for("dashboard"))
+
 # -------------------- ADMIN DASHBOARD --------------------
 @app.route("/admin")
 def admin_dashboard():
@@ -101,43 +129,38 @@ def admin_dashboard():
         return redirect(url_for("home"))
 
     orders = mongo.db.orders.find()
-    users = mongo.db.users.find()
+    return render_template("admin.html", orders=orders, user=session.get("user"))
 
-    return render_template(
-        "admin.html",
-        orders=orders,
-        users=users,
-        user=session.get("user")
+# -------------------- ADMIN UPDATE ORDER --------------------
+@app.route("/admin/update/<order_id>", methods=["POST"])
+def update_order(order_id):
+    if session.get("role") != "admin":
+        return redirect(url_for("home"))
+
+    status = request.form.get("status")
+    progress = int(request.form.get("progress"))
+
+    mongo.db.orders.update_one(
+        {"_id": ObjectId(order_id)},
+        {"$set": {"status": status, "progress": progress}}
     )
 
-# -------------------- PROJECTS --------------------
+    flash("Order updated")
+    return redirect(url_for("admin_dashboard"))
+
+# -------------------- STATIC PAGES --------------------
 @app.route("/projects")
 def projects():
-    projects_list = [
-        {
-            "title": "Residential Apartment Design",
-            "description": "Complete CAD drafting for residential project",
-            "image": "project1.jpg"
-        },
-        {
-            "title": "Office Renovation",
-            "description": "Construction documentation for office renovation",
-            "image": "project2.jpg"
-        }
-    ]
-    return render_template("projects.html", projects=projects_list, user=session.get("user"))
+    return render_template("projects.html", user=session.get("user"))
 
-# -------------------- SERVICES --------------------
 @app.route("/services")
 def services():
     return render_template("services.html", user=session.get("user"))
 
-# -------------------- ABOUT --------------------
 @app.route("/about")
 def about():
     return render_template("about.html", user=session.get("user"))
 
-# -------------------- CONTACT --------------------
 @app.route("/contact")
 def contact():
     return render_template("contact.html", user=session.get("user"))
