@@ -1,30 +1,26 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="hero">
+<div class="hero center-align">
   <h1>About Us</h1>
-  <p>Professional CAD drafting for UK & Europe. All drafters hold at least a Bachelor's degree in Civil Engineering and have extensive project experience.</p>
+  <p>Experience, precision, and professionalism in every drawing.</p>
 </div>
 
 <div class="section">
-  <h4>Contact & Address</h4>
+  <h4>Who We Are</h4>
   <p>
-    Cosmic Raccoon Drafting Club<br>
-    123 Engineering Street, London, UK<br>
-    Phone: +44 123 456 7890<br>
-    Email: info@cosmicraccoon.com
+    Precision Drafting & Engineering is a UK-based drafting and engineering service
+    supporting projects across the UK and Europe. Our team consists of qualified
+    Civil Engineers with strong technical backgrounds and hands-on project experience.
   </p>
-  <div id="map" style="height:400px;width:100%;"></div>
-</div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
-<script>
-function initMap() {
-  var location = {lat: 51.5074, lng: -0.1278}; // London
-  var map = new google.maps.Map(document.getElementById('map'), {zoom: 12, center: location});
-  var marker = new google.maps.Marker({position: location, map: map});
-}
-window.onload = initMap;
-</script>
+  <h4>How We Started</h4>
+  <p>
+    The company was founded to meet the growing demand for reliable, high-quality
+    drafting services that comply with modern building regulations. We focus on
+    clarity, accuracy, and communication — ensuring our clients receive drawings
+    they can trust.
+  </p>
+</div>
 
 {% endblock %}

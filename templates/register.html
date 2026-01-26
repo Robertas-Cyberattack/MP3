@@ -1,38 +1,29 @@
-{% extends "base.html" %}
-{% block content %}
-
-<div class="row">
-  <form class="col s12 m6 offset-m3" method="POST" action="{{ url_for('register') }}">
-    <div class="card-panel blue lighten-5">
-      <h5 class="center blue-text text-darken-4">Register</h5>
-
-      <div class="input-field">
-        <i class="material-icons prefix">person</i>
-        <input name="username" type="text" required>
-        <label>Username</label>
-      </div>
-
-      <div class="input-field">
-        <i class="material-icons prefix">email</i>
-        <input name="email" type="email" required>
-        <label>Email</label>
-      </div>
-
-      <div class="input-field">
-        <i class="material-icons prefix">phone</i>
-        <input name="phone" type="text">
-        <label>Phone</label>
-      </div>
-
-      <div class="input-field">
-        <i class="material-icons prefix">lock</i>
-        <input name="password" type="password" required>
-        <label>Password</label>
-      </div>
-
-      <button class="btn blue darken-2 col s12">Register</button>
-    </div>
-  </form>
+<div class="input-field">
+  <input name="first_name" type="text" required>
+  <label>First Name</label>
 </div>
 
-{% endblock %}
+<div class="input-field">
+  <input name="last_name" type="text" required>
+  <label>Surname</label>
+</div>
+
+<div class="input-field">
+  <input name="company" type="text">
+  <label>Company Name</label>
+</div>
+
+<div class="input-field">
+  <input name="email" type="email" required>
+  <label>Email</label>
+</div>
+
+<div class="input-field">
+  <input name="phone" type="text" required>
+  <label>Mobile</label>
+</div>
+
+<div class="input-field">
+  <input name="address" type="text">
+  <label>Address</label>
+</div>

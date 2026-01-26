@@ -1,41 +1,72 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="hero">
+<div class="hero center-align">
   <h1>Contact Us</h1>
-  <p>Get in touch for project inquiries or consultations.</p>
+  <p>Let’s discuss your project requirements.</p>
 </div>
 
 <div class="section">
   <div class="row">
-    <form class="col s12 m6 offset-m3" method="POST" action="#">
-      <div class="card-panel blue lighten-5">
-        <h5>Send Us a Message</h5>
 
+    <!-- Contact Info -->
+    <div class="col s12 m5">
+      <h5>Office Address</h5>
+      <p>
+        Precision Drafting & Engineering<br>
+        123 Engineering Street<br>
+        London, UK
+      </p>
+
+      <p>
+        <strong>Phone:</strong> +44 123 456 7890<br>
+        <strong>Email:</strong> info@precisiondrafting.com
+      </p>
+
+      <div id="map" style="height:300px;"></div>
+    </div>
+
+    <!-- Contact Form -->
+    <div class="col s12 m7">
+      <form>
         <div class="input-field">
-          <input id="name" type="text" required>
-          <label for="name">Your Name</label>
+          <input type="text" required>
+          <label>Name</label>
         </div>
 
         <div class="input-field">
-          <input id="email" type="email" required>
-          <label for="email">Email</label>
+          <input type="email" required>
+          <label>Email</label>
         </div>
 
         <div class="input-field">
-          <input id="phone" type="text">
-          <label for="phone">Phone</label>
+          <input type="text">
+          <label>Mobile</label>
         </div>
 
         <div class="input-field">
-          <textarea id="message" class="materialize-textarea" required></textarea>
-          <label for="message">Message</label>
+          <textarea class="materialize-textarea" required></textarea>
+          <label>Message</label>
         </div>
 
-        <button class="btn blue darken-2 col s12">Send Message</button>
-      </div>
-    </form>
+        <button class="btn blue darken-2">Send Message</button>
+      </form>
+    </div>
+
   </div>
 </div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+<script>
+function initMap() {
+  var location = {lat: 51.5074, lng: -0.1278};
+  var map = new google.maps.Map(document.getElementById("map"), {
+    zoom: 12,
+    center: location
+  });
+  new google.maps.Marker({ position: location, map: map });
+}
+window.onload = initMap;
+</script>
 
 {% endblock %}
