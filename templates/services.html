@@ -9,35 +9,28 @@
 <div class="section">
   <div class="row">
 
-    <div class="col s12 m6 l4">
-      <h5>CAD Drafting</h5>
-      <p>Accurate architectural and construction drawings for residential and commercial projects.</p>
-    </div>
+    {% set services = [
+      ("CAD Drafting","placeholder.jpg","Architectural & construction drawings."),
+      ("Structural Drawings","placeholder.jpg","Eurocode-compliant structural layouts."),
+      ("Civil Engineering","placeholder.jpg","Drainage, levels & infrastructure."),
+      ("MEP Coordination","placeholder.jpg","Mechanical, electrical & plumbing."),
+      ("Interior Layouts","placeholder.jpg","Office & residential interiors."),
+      ("Construction Docs","placeholder.jpg","Build-ready documentation.")
+    ] %}
 
+    {% for title, img, desc in services %}
     <div class="col s12 m6 l4">
-      <h5>Structural Drawings</h5>
-      <p>Structural layouts and details designed in compliance with Eurocodes.</p>
+      <div class="card hoverable">
+        <div class="card-image">
+          <img src="{{ url_for('static', filename='images/' ~ img) }}">
+        </div>
+        <div class="card-content center-align">
+          <span class="card-title">{{ title }}</span>
+          <p>{{ desc }}</p>
+        </div>
+      </div>
     </div>
-
-    <div class="col s12 m6 l4">
-      <h5>Civil Engineering</h5>
-      <p>Site layouts, levels, drainage, and infrastructure drafting solutions.</p>
-    </div>
-
-    <div class="col s12 m6 l4">
-      <h5>MEP Coordination</h5>
-      <p>Mechanical, electrical, and plumbing coordination drawings.</p>
-    </div>
-
-    <div class="col s12 m6 l4">
-      <h5>Interior Layouts</h5>
-      <p>Professional interior plans for offices, retail, and residential spaces.</p>
-    </div>
-
-    <div class="col s12 m6 l4">
-      <h5>Construction Documentation</h5>
-      <p>Clear, build-ready drawings that reduce errors and delays on site.</p>
-    </div>
+    {% endfor %}
 
   </div>
 </div>
