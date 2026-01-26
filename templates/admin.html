@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h4>Admin Panel – Orders</h4>
+
+{% for order in orders %}
+<div class="card">
+  <div class="card-content">
+    <p><strong>Client:</strong> {{ order.client }}</p>
+
+    <form method="POST" action="{{ url_for('update_order', order_id=order._id) }}">
+      <div class="input-field">
+        <input type="text" name="status" value="{{ order.status }}">
+        <label class="active">Status</label>
+      </div>
+
+      <div class="input-field">
+        <input type="number" name="progress" min="0" max="100" value="{{ order.progress }}">
+        <label class="active">Progress (%)</label>
+      </div>
+
+      <button class="btn green">Update</button>
+    </form>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}
