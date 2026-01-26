@@ -1,123 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Our Projects</title>
-    <link rel="stylesheet" href="static/css/style.css"> <!-- tavo CSS failas -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body>
-
-    <!-- Hero Section -->
-    <section class="hero">
-        <h1>Our Projects</h1>
-        <p>Take a look at some of our professional CAD, structural, and civil drafting projects.</p>
-    </section>
-
-    <!-- Projects Section -->
-    <section class="section">
-        <div class="projects-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-
-            <!-- Project 1 -->
-            <div class="card">
-                <div class="card-image">
-                    <img src="static/images/project1.jpg" alt="Residential Apartment Design">
-                </div>
-                <div class="card-content" style="padding: 15px;">
-                    <h3>Residential Apartment Design</h3>
-                    <p>Complete CAD drafting for a modern apartment complex in London, following British Building Codes.</p>
-                </div>
-            </div>
-
-            <!-- Project 2 -->
-            <div class="card">
-                <div class="card-image">
-                    <img src="static/images/project2.jpg" alt="Commercial Office Renovation">
-                </div>
-                <div class="card-content" style="padding: 15px;">
-                    <h3>Commercial Office Renovation</h3>
-                    <p>Detailed construction drawings for office space in Manchester, ensuring compliance with UK and Eurocodes.</p>
-                </div>
-            </div>
-
-            <!-- Project 3 -->
-            <div class="card">
-                <div class="card-image">
-                    <img src="static/images/project3.jpg" alt="Industrial Warehouse Layout">
-                </div>
-                <div class="card-content" style="padding: 15px;">
-                    <h3>Industrial Warehouse Layout</h3>
-                    <p>Efficient CAD plans for a warehouse in Birmingham, including structural and MEP integration.</p>
-                </div>
-            </div>
-
-            <!-- Project 4 -->
-            <div class="card">
-                <div class="card-image">
-                    <img src="static/images/project4.jpg" alt="Bridge Engineering Project">
-                </div>
-                <div class="card-content" style="padding: 15px;">
-                    <h3>Bridge Engineering Project</h3>
-                    <p>Structural and civil engineering drawings for a bridge design, following Eurocode standards.</p>
-                </div>
-            </div>
-
-            <!-- Project 5 -->
-            <div class="card">
-                <div class="card-image">
-                    <img src="static/images/project5.jpg" alt="Retail Store Interior Design">
-                </div>
-                <div class="card-content" style="padding: 15px;">
-                    <h3>Retail Store Interior Design</h3>
-                    <p>Professional CAD drafting for a chain of retail stores across Europe.</p>
-                </div>
-            </div>
-
-            <!-- Project 6 -->
-            <div class="card">
-                <div class="card-image">
-                    <img src="static/images/project6.jpg" alt="Luxury Villa Development">
-                </div>
-                <div class="card-content" style="padding: 15px;">
-                    <h3>Luxury Villa Development</h3>
-                    <p>Residential luxury villa construction drawings, tailored to British standards.</p>
-                </div>
-            </div>
-
 {% extends "base.html" %}
 {% block content %}
 
-<div class="hero">
+<!-- HERO -->
+<div class="hero center-align">
   <h1>Our Projects</h1>
-  <p>Take a look at some of our professional CAD, structural, and civil drafting projects.</p>
+  <p>
+    Take a look at some of our professional CAD, structural,
+    and civil drafting projects.
+  </p>
 </div>
 
+<!-- PROJECTS GRID -->
 <div class="section">
   <div class="row">
+
     {% for project in projects %}
     <div class="col s12 m6 l4">
       <div class="card hoverable">
+
         <div class="card-image">
-          <img src="{{ url_for('static', filename='images/' ~ project.image) }}" alt="{{ project.title }}">
+          <img
+            src="{{ url_for('static', filename='images/' ~ project.image) }}"
+            alt="{{ project.title }}">
         </div>
 
-        <div style="text-align: center; margin-top: 40px;">
-            <a href="index.html" class="btn" style="background-color:#1e88e5; color:white; padding:10px 30px; text-decoration:none;">Back to Home</a>
-        <div class="card-content">
+        <div class="card-content center-align">
           <span class="card-title">{{ project.title }}</span>
           <p>{{ project.description }}</p>
         </div>
-    </section>
+
       </div>
     </div>
     {% endfor %}
-  </div>
 
-  <div style="text-align: center; margin-top: 40px;">
-    <a href="{{ url_for('home') }}" class="btn blue darken-2">Back to Home</a>
   </div>
 </div>
 
-</body>
-</html>
 {% endblock %}
