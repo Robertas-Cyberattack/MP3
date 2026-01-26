@@ -1,12 +1,27 @@
 /* =========================
    General styles
    ========================= */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
 body {
   font-family: 'Roboto', sans-serif;
   background-color: #f5f5f5;
   color: #333;
-  margin: 0;
   line-height: 1.6;
+}
+
+/* Flex layout for sticky footer */
+.site {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.site-content {
+  flex: 1 0 auto;
 }
 
 /* =========================
@@ -16,30 +31,27 @@ nav {
   background-color: #1e88e5;
 }
 
-nav .nav-wrapper {
+.nav-wrapper {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 20px;
 }
 
-/* Company name (left) */
+/* Company name scaling */
 .brand-logo {
-  position: relative;
-  font-weight: bold;
-  font-size: 1.6rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 60%;
-  flex-shrink: 1;
+  font-weight: 600;
   color: #fff;
+  line-height: 1.2;
+
+  font-size: clamp(0.95rem, 2.5vw, 1.6rem);
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  max-width: 100%;
 }
 
-/* Desktop menu (right) */
-nav ul.right {
-  margin-left: auto;
-}
-
+/* Desktop menu */
 nav ul.right li a {
   color: #fff;
   font-weight: 500;
@@ -57,12 +69,12 @@ nav ul.right li a {
 
 .hero h1 {
   margin-bottom: 20px;
-  font-size: 3rem;
+  font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 500;
 }
 
 .hero p {
-  font-size: 1.4rem;
+  font-size: clamp(1rem, 2vw, 1.4rem);
   max-width: 900px;
   margin: 0 auto;
 }
@@ -79,9 +91,7 @@ nav ul.right li a {
   background-color: #fafafa;
 }
 
-/* =========================
-   Typography
-   ========================= */
+/* Typography */
 h4, h5, h6 {
   font-weight: 500;
   color: #1e88e5;
@@ -92,9 +102,7 @@ p {
   color: #444;
 }
 
-/* =========================
-   Cards (Projects)
-   ========================= */
+/* Cards */
 .card {
   border-radius: 8px;
   overflow: hidden;
@@ -107,6 +115,7 @@ p {
 }
 
 .card-image img {
+  width: 100%;
   height: 200px;
   object-fit: cover;
 }
@@ -121,9 +130,7 @@ p {
   margin-bottom: 10px;
 }
 
-/* =========================
-   Images
-   ========================= */
+/* Images */
 img {
   width: 100%;
   height: auto;
@@ -131,16 +138,7 @@ img {
   border-radius: 6px;
 }
 
-/* =========================
-   Services grid spacing
-   ========================= */
-.services-item {
-  margin-bottom: 30px;
-}
-
-/* =========================
-   Forms
-   ========================= */
+/* Forms */
 input[type=text],
 input[type=password],
 input[type=email],
@@ -154,9 +152,7 @@ textarea:focus {
   box-shadow: none !important;
 }
 
-/* =========================
-   Buttons
-   ========================= */
+/* Buttons */
 .btn {
   background-color: #1e88e5;
   border-radius: 25px;
@@ -168,9 +164,7 @@ textarea:focus {
   background-color: #1565c0;
 }
 
-/* =========================
-   Footer
-   ========================= */
+/* Footer */
 footer {
   background-color: #1e88e5;
   color: #fff;
@@ -178,40 +172,18 @@ footer {
   text-align: center;
 }
 
-/* =========================
-   Mobile & responsive
-   ========================= */
-
-/* Tablet */
+/* Responsive tweaks */
 @media screen and (max-width: 992px) {
-  .brand-logo {
-    font-size: 1.3rem;
-    max-width: 70%;
+  .hero {
+    padding: 100px 15px;
   }
 
-  .hero h1 {
-    font-size: 2.4rem;
-  }
-
-  .hero p {
-    font-size: 1.3rem;
+  .card-image img {
+    height: 180px;
   }
 }
 
-/* Mobile */
 @media screen and (max-width: 600px) {
-.brand-logo {
-  font-size: 1.4rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  /* KEY PART */
-  max-width: 100%;
-  flex: 1 1 auto;
-}
-
-
   .hero {
     padding: 80px 15px;
   }
@@ -226,23 +198,5 @@ footer {
 
   .card-image img {
     height: 150px;
-  }
-}
-
-.nav-wrapper ul.right {
-  flex-shrink: 0;
-}
-
-@media only screen and (max-width: 992px) {
-  .brand-logo {
-    font-size: 1.2rem;
-    max-width: 65%;
-  }
-}
-
-@media only screen and (max-width: 600px) {
-  .brand-logo {
-    font-size: 1.05rem;
-    max-width: 55%;
   }
 }
