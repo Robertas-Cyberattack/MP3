@@ -61,6 +61,16 @@ def logout():
 def home():
     return render_template("home.html")
 
+# ------------------- ABOUT PAGE -------------------
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
+# ------------------- CONTACT PAGE -------------------
+@app.route("/contact")
+def contact():
+    return render_template("contact.html")
+
 # ------------------- DASHBOARD (CLIENT) -------------------
 @app.route("/dashboard")
 @login_required
