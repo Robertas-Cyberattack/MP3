@@ -13,8 +13,8 @@ if os.path.exists("env.py"):
 
 # ------------------- APP SETUP -------------------
 app = Flask(__name__)
-app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
-app.secret_key = os.environ.get("SECRET_KEY")
+app.config["MONGO_URI"] = os.environ.get("MONGO_URI", "mongodb://localhost:27017/precisiondb")
+app.secret_key = os.environ.get("SECRET_KEY", "super-secret-key")
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -40,15 +40,47 @@ def admin_required(f):
     return wrap
 
 # ------------------- AUTH -------------------
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form.get("username").lower()
+        email = request.form.get("email")
+        phone = request.form.get("phone")
+        password = generate_password_hash(request.form.get("password"))
+
+        # Check if username exists
+        if mongo.db.users.find_one({"username": username}):
+            flash("Username already exists")
+            return redirect(url_for("register"))
+
+        # Insert user
+        mongo.db.users.insert_one({
+            "username": username,
+            "email": email,
+            "phone": phone,
+            "password": password,
+            "role": "user"
+        })
+        flash("Account created! Please log in.")
+        return redirect(url_for("login"))
+
+    return render_template("register.html")
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        user = mongo.db.users.find_one({"username": request.form.get("username").lower()})
-        if user and check_password_hash(user["password"], request.form.get("password")):
+        username = request.form.get("username").lower()
+        password = request.form.get("password")
+
+        user = mongo.db.users.find_one({"username": username})
+        if user and check_password_hash(user["password"], password):
             session["user"] = user["username"]
             session["role"] = user["role"]
             return redirect(url_for("admin_dashboard") if user["role"] == "admin" else url_for("dashboard"))
-        flash("Invalid login")
+
+        flash("Invalid username or password")
+        return redirect(url_for("login"))
+
     return render_template("login.html")
 
 @app.route("/logout")
