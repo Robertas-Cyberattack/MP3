@@ -1,28 +1,71 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h4>Admin Panel – Orders</h4>
+<h4>Admin Panel – Users</h4>
 
+{% for user in users %}
+<div class="card">
+  <div class="card-content">
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Phone:</strong> {{ user.phone }}</p>
+    <p><strong>Role:</strong> {{ user.role }}</p>
+    <p><strong>Locked:</strong> {{ 'Yes' if user.lock else 'No' }}</p>
+
+    <form method="POST" action="{{ url_for('update_user', user_id=user._id) }}">
+      <div class="input-field">
+        <input type="text" name="email" value="{{ user.email }}">
+        <label class="active">Email</label>
+      </div>
+      <div class="input-field">
+        <input type="text" name="phone" value="{{ user.phone }}">
+        <label class="active">Phone</label>
+      </div>
+      <div class="input-field">
+        <select name="role">
+          <option value="client" {% if user.role == 'client' %}selected{% endif %}>Client</option>
+          <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+        </select>
+        <label>Role</label>
+      </div>
+      <div class="input-field">
+        <select name="lock">
+          <option value="False" {% if not user.lock %}selected{% endif %}>Unlocked</option>
+          <option value="True" {% if user.lock %}selected{% endif %}>Locked</option>
+        </select>
+        <label>Account Lock</label>
+      </div>
+      <button class="btn green">Update User</button>
+    </form>
+  </div>
+</div>
+{% endfor %}
+
+<h4>Admin Panel – Orders</h4>
 {% for order in orders %}
 <div class="card">
   <div class="card-content">
     <p><strong>Client:</strong> {{ order.client }}</p>
-
     <form method="POST" action="{{ url_for('update_order', order_id=order._id) }}">
       <div class="input-field">
         <input type="text" name="status" value="{{ order.status }}">
         <label class="active">Status</label>
       </div>
-
       <div class="input-field">
         <input type="number" name="progress" min="0" max="100" value="{{ order.progress }}">
         <label class="active">Progress (%)</label>
       </div>
-
-      <button class="btn green">Update</button>
+      <button class="btn green">Update Order</button>
     </form>
   </div>
 </div>
 {% endfor %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var elems = document.querySelectorAll('select');
+  M.FormSelect.init(elems);
+});
+</script>
 
 {% endblock %}
