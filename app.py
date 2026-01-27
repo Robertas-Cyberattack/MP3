@@ -140,4 +140,4 @@ def send_message():
     return redirect(request.referrer)
 
 if __name__ == "__main__":
-    app.run()
+    app = Flask(__name__, static_folder='static')
