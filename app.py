@@ -56,22 +56,36 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-# ------------------- HOME -------------------
+# ------------------- PAGES -------------------
 @app.route("/")
 def home():
     return render_template("home.html")
 
-# ------------------- ABOUT PAGE -------------------
 @app.route("/about")
 def about():
     return render_template("about.html")
 
-# ------------------- CONTACT PAGE -------------------
 @app.route("/contact")
 def contact():
     return render_template("contact.html")
 
-# ------------------- DASHBOARD (CLIENT) -------------------
+@app.route("/projects")
+def projects():
+    projects_list = [
+        {"title": "Project A", "description": "Description for Project A", "image": "project_a.jpg"},
+        {"title": "Project B", "description": "Description for Project B", "image": "project_b.jpg"},
+    ]
+    return render_template("projects.html", projects=projects_list)
+
+@app.route("/services")
+def services():
+    services_list = [
+        {"title": "CAD Drafting", "description": "High-quality CAD drafting services."},
+        {"title": "Structural Design", "description": "Professional structural engineering solutions."},
+    ]
+    return render_template("services.html", services=services_list)
+
+# ------------------- DASHBOARD -------------------
 @app.route("/dashboard")
 @login_required
 def dashboard():
@@ -83,7 +97,6 @@ def dashboard():
         )
     return render_template("dashboard.html", orders=orders, messages=messages)
 
-# ------------------- UPLOAD ORDER -------------------
 @app.route("/upload", methods=["POST"])
 @login_required
 def upload_order():
@@ -103,22 +116,19 @@ def upload_order():
     })
     return redirect(url_for("dashboard"))
 
-# ------------------- ADMIN PANEL -------------------
+# ------------------- ADMIN -------------------
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
     users = list(mongo.db.users.find())
     orders = list(mongo.db.orders.find())
-
     messages = {}
     for order in orders:
         messages[str(order["_id"])] = list(
             mongo.db.messages.find({"order_id": order["_id"]}).sort("created", 1)
         )
-
     return render_template("admin.html", users=users, orders=orders, messages=messages)
 
-# ------------------- DELETE ORDER -------------------
 @app.route("/admin/order/delete/<order_id>", methods=["POST"])
 @admin_required
 def admin_delete_order(order_id):
@@ -126,7 +136,6 @@ def admin_delete_order(order_id):
     mongo.db.messages.delete_many({"order_id": ObjectId(order_id)})
     return redirect(url_for("admin_dashboard"))
 
-# ------------------- DELETE USER -------------------
 @app.route("/admin/user/delete/<user_id>", methods=["POST"])
 @admin_required
 def admin_delete_user(user_id):
@@ -136,7 +145,7 @@ def admin_delete_user(user_id):
         mongo.db.orders.delete_many({"client": user["username"]})
     return redirect(url_for("admin_dashboard"))
 
-# ------------------- SEND MESSAGE -------------------
+# ------------------- MESSAGES -------------------
 @app.route("/message/send", methods=["POST"])
 @login_required
 def send_message():
@@ -148,24 +157,6 @@ def send_message():
         "created": datetime.utcnow()
     })
     return redirect(request.referrer)
-
-# ------------------- PROJECTS PAGE -------------------
-@app.route("/projects")
-def projects():
-    projects_list = [
-        {"title": "Project A", "description": "Description for Project A", "image": "project_a.jpg"},
-        {"title": "Project B", "description": "Description for Project B", "image": "project_b.jpg"},
-    ]
-    return render_template("projects.html", projects=projects_list)
-
-# ------------------- SERVICES PAGE -------------------
-@app.route("/services")
-def services():
-    services_list = [
-        {"title": "CAD Drafting", "description": "High-quality CAD drafting services."},
-        {"title": "Structural Design", "description": "Professional structural engineering solutions."},
-    ]
-    return render_template("services.html", services=services_list)
 
 # ------------------- RUN APP -------------------
 if __name__ == "__main__":
