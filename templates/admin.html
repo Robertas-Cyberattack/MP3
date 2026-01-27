@@ -1,70 +1,97 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h4>Admin Panel – Users</h4>
+<div class="row">
+  <div class="col s12">
+    <ul class="tabs">
+      <li class="tab col s6"><a class="active" href="#users">Users</a></li>
+      <li class="tab col s6"><a href="#orders">Orders</a></li>
+    </ul>
+  </div>
 
-{% for user in users %}
-<div class="card">
-  <div class="card-content">
-    <p><strong>Username:</strong> {{ user.username }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-    <p><strong>Phone:</strong> {{ user.phone }}</p>
-    <p><strong>Role:</strong> {{ user.role }}</p>
-    <p><strong>Locked:</strong> {{ 'Yes' if user.lock else 'No' }}</p>
+  <!-- USERS TAB -->
+  <div id="users" class="col s12">
+    <h4 class="center-align">Admin Panel – Users</h4>
+    {% for user in users %}
+    <div class="card">
+      <div class="card-content">
+        <p><strong>Username:</strong> {{ user.username }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Phone:</strong> {{ user.phone }}</p>
+        <p><strong>Role:</strong> {{ user.role }}</p>
+        <p><strong>Locked:</strong> {{ 'Yes' if user.lock else 'No' }}</p>
 
-    <form method="POST" action="{{ url_for('update_user', user_id=user._id) }}">
-      <div class="input-field">
-        <input type="text" name="email" value="{{ user.email }}">
-        <label class="active">Email</label>
+        <form method="POST" action="{{ url_for('update_user', user_id=user._id) }}">
+          <div class="input-field">
+            <input type="text" name="email" value="{{ user.email }}">
+            <label class="active">Email</label>
+          </div>
+          <div class="input-field">
+            <input type="text" name="phone" value="{{ user.phone }}">
+            <label class="active">Phone</label>
+          </div>
+          <div class="input-field">
+            <select name="role">
+              <option value="client" {% if user.role == 'client' %}selected{% endif %}>Client</option>
+              <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+            </select>
+            <label>Role</label>
+          </div>
+          <div class="input-field">
+            <select name="lock">
+              <option value="False" {% if not user.lock %}selected{% endif %}>Unlocked</option>
+              <option value="True" {% if user.lock %}selected{% endif %}>Locked</option>
+            </select>
+            <label>Account Lock</label>
+          </div>
+          <button class="btn green">Update User</button>
+        </form>
       </div>
-      <div class="input-field">
-        <input type="text" name="phone" value="{{ user.phone }}">
-        <label class="active">Phone</label>
+    </div>
+    {% else %}
+      <p class="center-align">No users found.</p>
+    {% endfor %}
+  </div>
+
+  <!-- ORDERS TAB -->
+  <div id="orders" class="col s12">
+    <h4 class="center-align">Admin Panel – Orders</h4>
+    {% for order in orders %}
+    <div class="card">
+      <div class="card-content">
+        <p><strong>Client:</strong> {{ order.client }}</p>
+        <form method="POST" action="{{ url_for('update_order', order_id=order._id) }}">
+          <div class="input-field">
+            <input type="text" name="status" value="{{ order.status }}">
+            <label class="active">Status</label>
+          </div>
+          <div class="input-field">
+            <input type="number" name="progress" min="0" max="100" value="{{ order.progress }}">
+            <label class="active">Progress (%)</label>
+          </div>
+          <button class="btn green">Update Order</button>
+        </form>
+        <div class="section">
+          <p><strong>Files:</strong></p>
+          {% for file in order.files %}
+            <p>📄 <a href="{{ url_for('static', filename='../uploads/' ~ file) }}" target="_blank">{{ file }}</a></p>
+          {% endfor %}
+        </div>
       </div>
-      <div class="input-field">
-        <select name="role">
-          <option value="client" {% if user.role == 'client' %}selected{% endif %}>Client</option>
-          <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
-        </select>
-        <label>Role</label>
-      </div>
-      <div class="input-field">
-        <select name="lock">
-          <option value="False" {% if not user.lock %}selected{% endif %}>Unlocked</option>
-          <option value="True" {% if user.lock %}selected{% endif %}>Locked</option>
-        </select>
-        <label>Account Lock</label>
-      </div>
-      <button class="btn green">Update User</button>
-    </form>
+    </div>
+    {% else %}
+      <p class="center-align">No orders found.</p>
+    {% endfor %}
   </div>
 </div>
-{% endfor %}
-
-<h4>Admin Panel – Orders</h4>
-{% for order in orders %}
-<div class="card">
-  <div class="card-content">
-    <p><strong>Client:</strong> {{ order.client }}</p>
-    <form method="POST" action="{{ url_for('update_order', order_id=order._id) }}">
-      <div class="input-field">
-        <input type="text" name="status" value="{{ order.status }}">
-        <label class="active">Status</label>
-      </div>
-      <div class="input-field">
-        <input type="number" name="progress" min="0" max="100" value="{{ order.progress }}">
-        <label class="active">Progress (%)</label>
-      </div>
-      <button class="btn green">Update Order</button>
-    </form>
-  </div>
-</div>
-{% endfor %}
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  var elems = document.querySelectorAll('select');
-  M.FormSelect.init(elems);
+  var elemsSelect = document.querySelectorAll('select');
+  M.FormSelect.init(elemsSelect);
+
+  var elemsTabs = document.querySelectorAll('.tabs');
+  M.Tabs.init(elemsTabs);
 });
 </script>
 
