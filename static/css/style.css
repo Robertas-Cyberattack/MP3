@@ -15,8 +15,25 @@
   height: 10px;
 }
 
+/* === NAVBAR FIX === */
+nav .brand-logo {
+  max-width: calc(100% - 64px); /* vieta hamburgeriui */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* kai hamburgeris ATSIRANDA (Materialize breakpoint) */
+@media (max-width: 992px) {
+  nav .brand-logo {
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.1rem;
+  }
+}
+
+/* labai maži ekranai */
 @media (max-width: 600px) {
-  .brand-logo {
+  nav .brand-logo {
     font-size: 1rem;
   }
 }
