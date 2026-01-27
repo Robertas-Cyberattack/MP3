@@ -59,6 +59,21 @@ def logout():
 def home():
     return render_template("home.html")
 
+# ---------------- PROJECTS ----------------
+@app.route("/projects")
+def projects():
+    # If you have a 'projects' collection in MongoDB, use this:
+    # projects_list = list(mongo.db.projects.find())
+    
+    # Otherwise, here's a placeholder list
+    projects_list = [
+        {"title": "Project A", "description": "Description for Project A", "image": "project_a.jpg"},
+        {"title": "Project B", "description": "Description for Project B", "image": "project_b.jpg"},
+        {"title": "Project C", "description": "Description for Project C", "image": "project_c.jpg"}
+    ]
+    
+    return render_template("projects.html", projects=projects_list)
+
 # ---------------- DASHBOARD (CLIENT) ----------------
 @app.route("/dashboard")
 @login_required
@@ -139,5 +154,6 @@ def send_message():
     })
     return redirect(request.referrer)
 
+# ---------------- RUN APP ----------------
 if __name__ == "__main__":
-    app = Flask(__name__, static_folder='static')
+    app.run(debug=True)
