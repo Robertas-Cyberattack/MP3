@@ -1,20 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h4 class="center-align">My Orders</h4>
+<h4>My Orders</h4>
 
 <!-- UPLOAD FORM -->
 <div class="card">
   <div class="card-content">
-    <h5>Upload New Order</h5>
     <form method="POST" action="{{ url_for('upload_order') }}" enctype="multipart/form-data">
       <div class="file-field input-field">
         <div class="btn blue">
-          <span>Upload File</span>
+          <span>Upload Files</span>
           <input type="file" name="file" multiple required>
         </div>
         <div class="file-path-wrapper">
-          <input class="file-path validate" type="text" placeholder="Choose file(s)">
+          <input class="file-path validate" type="text">
         </div>
       </div>
       <button class="btn blue darken-2">Submit Order</button>
@@ -23,30 +22,40 @@
 </div>
 
 <!-- ORDERS LIST -->
-{% if orders %}
-  {% for order in orders %}
-  <div class="card">
-    <div class="card-content">
-      <p><strong>Status:</strong> {{ order.status }}</p>
-      <p><strong>Progress:</strong> {{ order.progress }}%</p>
+{% for order in orders %}
+<div class="card">
+  <div class="card-content">
 
-      <!-- PROGRESS BAR -->
-      <div class="progress" style="margin-bottom: 15px;">
-        <div class="determinate" style="width: {{ order.progress }}%"></div>
-      </div>
+    <p><strong>Status:</strong> {{ order.status }}</p>
+    <p><strong>Progress:</strong> {{ order.progress }}%</p>
 
-      <!-- FILES LIST -->
-      <div>
-        <strong>Files:</strong>
-        {% for file in order.files %}
-          <p>📄 <a href="{{ url_for('static', filename='../uploads/' ~ file) }}" target="_blank">{{ file }}</a></p>
-        {% endfor %}
-      </div>
+    <div class="progress">
+      <div class="determinate" style="width: {{ order.progress }}%"></div>
     </div>
+
+    <hr>
+
+    <p><strong>Files:</strong></p>
+    {% for file in order.files %}
+      <p>📄 {{ file }}</p>
+    {% endfor %}
+
+    <br>
+
+    <!-- DELETE BUTTON -->
+    <form method="POST"
+          action="{{ url_for('delete_order', order_id=order._id) }}"
+          onsubmit="return confirm('Delete this order permanently?');">
+      <button class="btn red darken-2">
+        <i class="material-icons left">delete</i>
+        Delete Order
+      </button>
+    </form>
+
   </div>
-  {% endfor %}
+</div>
 {% else %}
-  <p class="center-align">No orders yet. Upload your first order above!</p>
-{% endif %}
+<p>No orders yet.</p>
+{% endfor %}
 
 {% endblock %}
