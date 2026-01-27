@@ -62,3 +62,38 @@ nav .brand-logo {
     font-size: 1rem;
   }
 }
+
+/* ===== OVERRIDE MATERIALIZE NAVBAR LAYOUT ===== */
+
+nav .nav-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* hamburger */
+nav .sidenav-trigger {
+  position: relative;
+  margin-right: 12px;
+}
+
+/* logo */
+nav .brand-logo {
+  position: static !important;   /* NUŽUDOM absolute */
+  transform: none !important;
+  white-space: nowrap;
+  font-size: 1.3rem;
+}
+
+/* kai hamburgeris aktyvus */
+@media (max-width: 992px) {
+  nav .brand-logo {
+    font-size: 1.1rem;
+  }
+}
+
+/* maži ekranai */
+@media (max-width: 600px) {
+  nav .brand-logo {
+    font-size: 1rem;
+  }
+}
