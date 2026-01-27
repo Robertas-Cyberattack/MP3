@@ -7,9 +7,11 @@ from bson.objectid import ObjectId
 from functools import wraps
 from datetime import datetime
 
+# Load environment variables if env.py exists
 if os.path.exists("env.py"):
     import env
 
+# ------------------- APP SETUP -------------------
 app = Flask(__name__)
 app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
 app.secret_key = os.environ.get("SECRET_KEY")
@@ -20,7 +22,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 mongo = PyMongo(app)
 
-# ---------------- DECORATORS ----------------
+# ------------------- DECORATORS -------------------
 def login_required(f):
     @wraps(f)
     def wrap(*args, **kwargs):
@@ -37,7 +39,7 @@ def admin_required(f):
         return f(*args, **kwargs)
     return wrap
 
-# ---------------- AUTH ----------------
+# ------------------- AUTH -------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -54,41 +56,24 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-# ---------------- HOME ----------------
+# ------------------- HOME -------------------
 @app.route("/")
 def home():
     return render_template("home.html")
 
-# ---------------- PROJECTS ----------------
-@app.route("/projects")
-def projects():
-    # If you have a 'projects' collection in MongoDB, use this:
-    # projects_list = list(mongo.db.projects.find())
-    
-    # Otherwise, here's a placeholder list
-    projects_list = [
-        {"title": "Project A", "description": "Description for Project A", "image": "project_a.jpg"},
-        {"title": "Project B", "description": "Description for Project B", "image": "project_b.jpg"},
-        {"title": "Project C", "description": "Description for Project C", "image": "project_c.jpg"}
-    ]
-    
-    return render_template("projects.html", projects=projects_list)
-
-# ---------------- DASHBOARD (CLIENT) ----------------
+# ------------------- DASHBOARD (CLIENT) -------------------
 @app.route("/dashboard")
 @login_required
 def dashboard():
     orders = list(mongo.db.orders.find({"client": session["user"]}))
-
     messages = {}
     for order in orders:
         messages[str(order["_id"])] = list(
             mongo.db.messages.find({"order_id": order["_id"]}).sort("created", 1)
         )
-
     return render_template("dashboard.html", orders=orders, messages=messages)
 
-# ---------------- UPLOAD ORDER ----------------
+# ------------------- UPLOAD ORDER -------------------
 @app.route("/upload", methods=["POST"])
 @login_required
 def upload_order():
@@ -108,7 +93,7 @@ def upload_order():
     })
     return redirect(url_for("dashboard"))
 
-# ---------------- ADMIN PANEL ----------------
+# ------------------- ADMIN PANEL -------------------
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
@@ -123,7 +108,7 @@ def admin_dashboard():
 
     return render_template("admin.html", users=users, orders=orders, messages=messages)
 
-# ---------------- DELETE ORDER ----------------
+# ------------------- DELETE ORDER -------------------
 @app.route("/admin/order/delete/<order_id>", methods=["POST"])
 @admin_required
 def admin_delete_order(order_id):
@@ -131,7 +116,7 @@ def admin_delete_order(order_id):
     mongo.db.messages.delete_many({"order_id": ObjectId(order_id)})
     return redirect(url_for("admin_dashboard"))
 
-# ---------------- DELETE USER ----------------
+# ------------------- DELETE USER -------------------
 @app.route("/admin/user/delete/<user_id>", methods=["POST"])
 @admin_required
 def admin_delete_user(user_id):
@@ -141,7 +126,7 @@ def admin_delete_user(user_id):
         mongo.db.orders.delete_many({"client": user["username"]})
     return redirect(url_for("admin_dashboard"))
 
-# ---------------- SEND MESSAGE (ORDER BASED) ----------------
+# ------------------- SEND MESSAGE -------------------
 @app.route("/message/send", methods=["POST"])
 @login_required
 def send_message():
@@ -154,6 +139,24 @@ def send_message():
     })
     return redirect(request.referrer)
 
-# ---------------- RUN APP ----------------
+# ------------------- PROJECTS PAGE -------------------
+@app.route("/projects")
+def projects():
+    projects_list = [
+        {"title": "Project A", "description": "Description for Project A", "image": "project_a.jpg"},
+        {"title": "Project B", "description": "Description for Project B", "image": "project_b.jpg"},
+    ]
+    return render_template("projects.html", projects=projects_list)
+
+# ------------------- SERVICES PAGE -------------------
+@app.route("/services")
+def services():
+    services_list = [
+        {"title": "CAD Drafting", "description": "High-quality CAD drafting services."},
+        {"title": "Structural Design", "description": "Professional structural engineering solutions."},
+    ]
+    return render_template("services.html", services=services_list)
+
+# ------------------- RUN APP -------------------
 if __name__ == "__main__":
-    app = Flask(__name__, static_folder='static')
+    app.run(debug=True)
