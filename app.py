@@ -4,8 +4,9 @@ from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from bson.objectid import ObjectId
+from functools import wraps
 
-# Load env variables
+# Load environment variables
 if os.path.exists("env.py"):
     import env
 
@@ -21,6 +22,27 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 mongo = PyMongo(app)
+
+# -------------------- DECORATORS --------------------
+# Added login_required decorator to protect routes
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if "user" not in session:
+            flash("Please login first")
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated
+
+# Added admin_required decorator to restrict admin-only routes
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if session.get("role") != "admin":
+            flash("Admin access only")
+            return redirect(url_for("home"))
+        return f(*args, **kwargs)
+    return decorated
 
 # -------------------- HOME --------------------
 @app.route("/")
@@ -40,6 +62,7 @@ def register():
             flash("Username already exists")
             return redirect(url_for("register"))
 
+        # Insert new user with default client role and unlocked status
         mongo.db.users.insert_one({
             "username": username,
             "password": generate_password_hash(password),
@@ -75,6 +98,7 @@ def login():
                 session["user"] = username
                 session["role"] = user["role"]
 
+                # Redirect based on role
                 if user["role"] == "admin":
                     return redirect(url_for("admin_dashboard"))
                 return redirect(url_for("dashboard"))
@@ -93,31 +117,32 @@ def logout():
 
 # -------------------- CLIENT DASHBOARD --------------------
 @app.route("/dashboard")
+@login_required
 def dashboard():
-    if "user" not in session:
-        return redirect(url_for("login"))
-
-    orders = mongo.db.orders.find({"client": session["user"]})
+    # Fetch all orders for logged-in client
+    orders = list(mongo.db.orders.find({"client": session["user"]}))
     return render_template("dashboard.html", orders=orders, user=session.get("user"))
 
 # -------------------- FILE UPLOAD --------------------
 @app.route("/upload", methods=["POST"])
+@login_required
 def upload_order():
-    if "user" not in session:
-        return redirect(url_for("login"))
+    # Support multiple file uploads
+    files = request.files.getlist("file")
 
-    file = request.files.get("file")
-
-    if not file or file.filename == "":
+    if not files or files[0].filename == "":
         flash("No file selected")
         return redirect(url_for("dashboard"))
 
-    filename = secure_filename(file.filename)
-    file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+    saved_files = []
+    for file in files:
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+        saved_files.append(filename)
 
     mongo.db.orders.insert_one({
         "client": session["user"],
-        "files": [filename],
+        "files": saved_files,
         "status": "Received",
         "progress": 0
     })
@@ -127,20 +152,16 @@ def upload_order():
 
 # -------------------- ADMIN DASHBOARD --------------------
 @app.route("/admin")
+@admin_required
 def admin_dashboard():
-    if session.get("role") != "admin":
-        return redirect(url_for("home"))
-
-    users = mongo.db.users.find()
-    orders = mongo.db.orders.find()
+    users = list(mongo.db.users.find())
+    orders = list(mongo.db.orders.find())
     return render_template("admin.html", users=users, orders=orders, user=session.get("user"))
 
 # -------------------- ADMIN UPDATE USER --------------------
 @app.route("/admin/update_user/<user_id>", methods=["POST"])
+@admin_required
 def update_user(user_id):
-    if session.get("role") != "admin":
-        return redirect(url_for("home"))
-
     email = request.form.get("email")
     phone = request.form.get("phone")
     role = request.form.get("role")
@@ -156,10 +177,8 @@ def update_user(user_id):
 
 # -------------------- ADMIN UPDATE ORDER --------------------
 @app.route("/admin/update/<order_id>", methods=["POST"])
+@admin_required
 def update_order(order_id):
-    if session.get("role") != "admin":
-        return redirect(url_for("home"))
-
     status = request.form.get("status")
     progress = int(request.form.get("progress"))
 
@@ -174,7 +193,16 @@ def update_order(order_id):
 # -------------------- STATIC PAGES --------------------
 @app.route("/projects")
 def projects():
-    return render_template("projects.html", user=session.get("user"))
+    # Added projects list to display 6 projects on the page
+    projects_list = [
+        {"title": "Residential CAD", "description": "Detailed residential CAD projects.", "image": "placeholder.jpg"},
+        {"title": "Commercial CAD", "description": "High-rise and office projects.", "image": "placeholder.jpg"},
+        {"title": "Structural Drafting", "description": "Eurocode-compliant structures.", "image": "placeholder.jpg"},
+        {"title": "Civil Engineering", "description": "Drainage, roads, infrastructure.", "image": "placeholder.jpg"},
+        {"title": "MEP Coordination", "description": "Mechanical, electrical & plumbing.", "image": "placeholder.jpg"},
+        {"title": "Interior Layouts", "description": "Office and residential interiors.", "image": "placeholder.jpg"},
+    ]
+    return render_template("projects.html", projects=projects_list, user=session.get("user"))
 
 @app.route("/services")
 def services():
