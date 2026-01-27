@@ -140,4 +140,4 @@ def send_message():
     return redirect(request.referrer)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
