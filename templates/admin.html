@@ -1,59 +1,82 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h4>Admin Panel</h4>
+<div class="row">
+  <div class="col s12">
+    <ul class="tabs">
+      <li class="tab col s6"><a class="active" href="#orders">Orders</a></li>
+      <li class="tab col s6"><a href="#users">Users</a></li>
+    </ul>
+  </div>
 
-<h5>Users</h5>
-{% for user in users %}
-<div class="card">
-  <div class="card-content">
-    <p><strong>{{ user.username }}</strong> ({{ user.role }})</p>
+  <!-- ORDERS TAB -->
+  <div id="orders" class="col s12">
+    <h4>Orders & Messages</h4>
 
-    {% if user.username != session.user %}
-    <form method="POST"
-          action="{{ url_for('admin_delete_user', user_id=user._id) }}"
-          onsubmit="return confirm('Delete user and all orders?');">
-      <button class="btn red">Delete User</button>
-    </form>
-    {% endif %}
+    {% for order in orders %}
+    <div class="card">
+      <div class="card-content">
+        <p><strong>Client:</strong> {{ order.client }}</p>
+        <p>Status: {{ order.status }} | {{ order.progress }}%</p>
 
-    <form method="POST" action="{{ url_for('send_message') }}">
-      <input type="hidden" name="to" value="{{ user.username }}">
-      <div class="input-field">
-        <input name="text" placeholder="Message to user">
+        <form method="POST"
+              action="{{ url_for('admin_delete_order', order_id=order._id) }}"
+              onsubmit="return confirm('Delete order and messages?');">
+          <button class="btn red">Delete Order</button>
+        </form>
+
+        <hr>
+
+        <h6>Messages</h6>
+        {% for msg in messages[order._id|string] %}
+          <p>
+            <strong>{{ msg.from }}:</strong>
+            {{ msg.text }}
+          </p>
+        {% else %}
+          <p class="grey-text">No messages yet.</p>
+        {% endfor %}
+
+        <form method="POST" action="{{ url_for('send_message') }}">
+          <input type="hidden" name="order_id" value="{{ order._id }}">
+          <input type="hidden" name="to" value="{{ order.client }}">
+          <div class="input-field">
+            <input name="text" placeholder="Message about this order" required>
+          </div>
+          <button class="btn blue">Send</button>
+        </form>
+
       </div>
-      <button class="btn blue">Send Message</button>
-    </form>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- USERS TAB -->
+  <div id="users" class="col s12">
+    <h4>Users</h4>
+
+    {% for user in users %}
+    <div class="card">
+      <div class="card-content">
+        <p><strong>{{ user.username }}</strong> ({{ user.role }})</p>
+
+        {% if user.username != session.user %}
+        <form method="POST"
+              action="{{ url_for('admin_delete_user', user_id=user._id) }}"
+              onsubmit="return confirm('Delete user and all orders?');">
+          <button class="btn red">Delete User</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
   </div>
 </div>
-{% endfor %}
 
-<hr>
-
-<h5>Orders</h5>
-{% for order in orders %}
-<div class="card">
-  <div class="card-content">
-    <p><strong>Client:</strong> {{ order.client }}</p>
-    <p>Status: {{ order.status }} | Progress: {{ order.progress }}%</p>
-
-    <form method="POST"
-          action="{{ url_for('admin_delete_order', order_id=order._id) }}"
-          onsubmit="return confirm('Delete order?');">
-      <button class="btn red">Delete Order</button>
-    </form>
-  </div>
-</div>
-{% endfor %}
-
-<hr>
-
-<h5>Messages</h5>
-{% for msg in messages %}
-<div class="card-panel grey lighten-4">
-  <p><strong>{{ msg.from }}</strong> → {{ msg.to }}</p>
-  <p>{{ msg.text }}</p>
-</div>
-{% endfor %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  M.Tabs.init(document.querySelectorAll('.tabs'));
+});
+</script>
 
 {% endblock %}
