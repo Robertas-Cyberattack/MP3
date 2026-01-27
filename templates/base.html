@@ -6,8 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Materialize CSS -->
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+  >
 
   <!-- Google Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -15,27 +17,41 @@
   <!-- Custom CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body class="site">
 
-<!-- NAVBAR -->
+<!-- ================= NAVBAR ================= -->
 <nav class="blue darken-2">
   <div class="nav-wrapper container">
-    <a href="{{ url_for('home') }}" class="brand-logo">Precision Drafting & Engineering</a>
 
-    <!-- Hamburger menu -->
+    <!-- Logo -->
+    <a href="{{ url_for('home') }}" class="brand-logo">
+      Precision Drafting & Engineering
+    </a>
+
+    <!-- Mobile trigger -->
     <a href="#" data-target="mobile-menu" class="sidenav-trigger">
       <i class="material-icons">menu</i>
     </a>
 
-    <!-- Desktop menu -->
+    <!-- ===== DESKTOP MENU ===== -->
     <ul class="right hide-on-med-and-down">
       <li><a href="{{ url_for('home') }}">Home</a></li>
       <li><a href="{{ url_for('projects') }}">Projects</a></li>
       <li><a href="{{ url_for('services') }}">Services</a></li>
       <li><a href="{{ url_for('about') }}">About</a></li>
       <li><a href="{{ url_for('contact') }}">Contact</a></li>
-      {% if user %}
+
+      {% if session.get("user") %}
+
+        {% if session.get("role") == "admin" %}
+          <li><a href="{{ url_for('admin_dashboard') }}">Admin</a></li>
+        {% else %}
+          <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+        {% endif %}
+
         <li><a href="{{ url_for('logout') }}">Logout</a></li>
+
       {% else %}
         <li><a href="{{ url_for('login') }}">Login</a></li>
         <li><a href="{{ url_for('register') }}">Register</a></li>
@@ -44,39 +60,49 @@
   </div>
 </nav>
 
-<!-- MOBILE MENU -->
+<!-- ===== MOBILE MENU ===== -->
 <ul class="sidenav" id="mobile-menu">
   <li><a href="{{ url_for('home') }}">Home</a></li>
   <li><a href="{{ url_for('projects') }}">Projects</a></li>
   <li><a href="{{ url_for('services') }}">Services</a></li>
   <li><a href="{{ url_for('about') }}">About</a></li>
   <li><a href="{{ url_for('contact') }}">Contact</a></li>
-  {% if user %}
+
+  {% if session.get("user") %}
+
+    {% if session.get("role") == "admin" %}
+      <li><a href="{{ url_for('admin_dashboard') }}">Admin</a></li>
+    {% else %}
+      <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+    {% endif %}
+
     <li><a href="{{ url_for('logout') }}">Logout</a></li>
+
   {% else %}
     <li><a href="{{ url_for('login') }}">Login</a></li>
     <li><a href="{{ url_for('register') }}">Register</a></li>
   {% endif %}
 </ul>
 
-<!-- MAIN CONTENT -->
+<!-- ================= MAIN CONTENT ================= -->
 <main class="container site-content" style="margin-top: 40px;">
   {% block content %}{% endblock %}
 </main>
 
-<!-- FOOTER -->
+<!-- ================= FOOTER ================= -->
 <footer class="page-footer blue darken-2">
   <div class="container center-align">
     © 2026 Precision Drafting & Engineering
   </div>
 </footer>
 
+<!-- ================= SCRIPTS ================= -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  var elems = document.querySelectorAll('.sidenav');
-  M.Sidenav.init(elems);
-});
+  document.addEventListener('DOMContentLoaded', function () {
+    var elems = document.querySelectorAll('.sidenav');
+    M.Sidenav.init(elems);
+  });
 </script>
 
 </body>
