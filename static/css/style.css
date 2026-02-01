@@ -1,72 +1,53 @@
-/* ===============================
-   GLOBAL
-================================ */
-
+/* GLOBAL HERO */
 .hero {
   padding: 60px 20px;
+  text-align: center;
 }
 
-.card {
-  display: flex;
-  margin-bottom: 20px;
-  flex-direction: column;
-  min-height: 350px; /* arba kitas tinkamas aukštis */
-}
-
-.card-content {
-  flex-grow: 1;
-}
-
-
-.progress {
-  height: 10px;
-}
-
-/* ===============================
-   NAVBAR – STABILUS SPRENDIMAS
-================================ */
-
+/* NAVBAR */
 nav {
   height: 72px;
   line-height: 72px;
+  z-index: 999;
 }
 
-/* hamburger */
-nav .sidenav-trigger {
-  height: 72px;
-  line-height: 72px;
-}
-
-/* logo tekstas */
 nav .brand-logo {
-  position: relative;
-  left: 0;
-  transform: none;
-  padding-left: 56px; /* vieta hamburgeriui */
+  padding-left: 56px;
   font-size: 1.3rem;
   white-space: nowrap;
 }
 
-/* tablet + mobile */
 @media (max-width: 992px) {
-  nav .brand-logo {
-    font-size: 1.1rem;
-  }
+  nav .brand-logo { font-size: 1.1rem; }
 }
 
-/* small mobile */
 @media (max-width: 600px) {
-  nav {
-    height: 64px;
-    line-height: 64px;
-  }
+  nav { height: 64px; line-height: 64px; }
+  nav .brand-logo { font-size: 1rem; }
+}
 
-  nav .sidenav-trigger {
-    height: 64px;
-    line-height: 64px;
-  }
+/* CARDS (projects/services) */
+.row.equal-height {
+  display: flex;
+  flex-wrap: wrap;
+}
 
-  nav .brand-logo {
-    font-size: 1rem;
-  }
+.row.equal-height .col {
+  display: flex;
+  flex-direction: column;
+}
+
+.row.equal-height .card {
+  flex: 1 1 auto;
+}
+
+.row .col .card .card-content {
+  flex-grow: 1;
+  text-align: center;
+}
+
+.card-image img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
 }

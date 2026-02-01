@@ -21,7 +21,6 @@ app.config["MAIL_PORT"] = 587
 app.config["MAIL_USE_TLS"] = True
 app.config["MAIL_USERNAME"] = "apikey"
 app.config["MAIL_PASSWORD"] = os.environ.get("SENDGRID_API_KEY")
-# BŪTINAI naudok patvirtintą el. paštą SendGrid'e
 app.config["MAIL_DEFAULT_SENDER"] = "robertas.sladkevicius@gmail.com"
 mail = Mail(app)
 
@@ -53,8 +52,18 @@ def admin_required(f):
     return wrap
 
 # ------------------- ROUTES -------------------
+@app.route("/")
+def home():
+    return render_template("home.html")
 
-# --- CONTACT FORM ---
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
+@app.route("/contact")
+def contact():
+    return render_template("contact.html")
+
 @app.route("/contact/send", methods=["POST"])
 def contact_send():
     data = {
@@ -64,14 +73,12 @@ def contact_send():
         "message": request.form.get("message"),
         "created": datetime.utcnow()
     }
-
     mongo.db.contact_messages.insert_one(data)
-
     try:
         msg = Message(
             subject="New Contact Form Message",
             sender=app.config["MAIL_DEFAULT_SENDER"],
-            recipients=["robertas.sladkevicius@gmail.com"],  # patvirtintas el. paštas
+            recipients=["robertas.sladkevicius@gmail.com"],
             body=f"""
 Name: {data['name']}
 Email: {data['email']}
@@ -86,10 +93,8 @@ Message:
     except Exception as e:
         print("EMAIL ERROR:", e)
         flash("Failed to send email. Check SendGrid settings.")
-
     return redirect(url_for("contact"))
 
-# --- AUTH ---
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -136,107 +141,40 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-# --- PAGES ---
-@app.route("/")
-def home():
-    return render_template("home.html")
-
-@app.route("/about")
-def about():
-    return render_template("about.html")
-
-@app.route("/contact")
-def contact():
-    return render_template("contact.html")
-
 @app.route("/projects")
 def projects():
     projects_list = [
-        {"title": "Residential building extension", "description": "Residential building extension project including detailed CAD drawings and construction documentation.", "image": "project1.jpg"},
-        {"title": "I beam calculation", "description": "Structural I-beam calculation and installation design for a wall removal project", "image": "project2.jpg"},
-        {"title": "Commercial fit-out", "description": "Commercial layout drawings and material requirement estimation", "image": "project3.jpg"},
-        {"title": "Industrial Warehouse", "description": "Large-span warehouse structural and layout drawings.", "image": "project4.jpg"},
-        {"title": "Foundation Design", "description": "Reinforced concrete foundation plans and sections.", "image": "project5.jpg"},
-        {"title": "Renovation Project", "description": "As-built drawings and renovation documentation.", "image": "project6.jpg"},
+        {"title": "Residential building extension", "description": "Residential building extension project including detailed CAD drawings and construction documentation.", "image": "extension.jpg"},
+        {"title": "I beam calculation", "description": "Structural I-beam calculation and installation design for a wall removal project", "image": "I_beam.jpg"},
+        {"title": "Commercial fit-out", "description": "Commercial layout drawings and material requirement estimation", "image": "commercial.jpg"},
+        {"title": "Industrial Warehouse", "description": "Large-span warehouse structural and layout drawings.", "image": "industrial.jpg"},
+        {"title": "Foundation Design", "description": "Reinforced concrete foundation plans and sections.", "image": "foundation.jpg"},
+        {"title": "Renovation Project", "description": "As-built drawings and renovation documentation.", "image": "renovation.jpg"},
     ]
     return render_template("projects.html", projects=projects_list)
 
 @app.route("/services")
 def services():
     services_list = [
-        {"title": "CAD Drafting", "description": "High-quality CAD drafting services."},
-        {"title": "Structural Design", "description": "Professional structural engineering solutions."},
+        {"title": "CAD Drafting", "description": "High-quality CAD drafting services.", "image": "drafting.jpg"},
+        {"title": "Structural Design", "description": "Professional structural engineering solutions.", "image": "structural.jpg"},
+        {"title": "Civil Engineering", "description": "Drainage, levels & infrastructure.", "image": "civil.jpg"},
+        {"title": "MEP Coordination", "description": "Mechanical, electrical & plumbing.", "image": "mep.jpg"},
+        {"title": "Interior Layouts", "description": "Office & residential interiors.", "image": "interior_layout.png"},
+        {"title": "Construction Docs", "description": "Build-ready documentation.", "image": "docs.jpg"},
     ]
     return render_template("services.html", services=services_list)
 
-# --- DASHBOARD ---
+# Dashboard routes placeholders
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    orders = list(mongo.db.orders.find({"client": session["user"]}))
-    messages = {}
-    for order in orders:
-        messages[str(order["_id"])] = list(mongo.db.messages.find({"order_id": order["_id"]}).sort("created", 1))
-    return render_template("dashboard.html", orders=orders, messages=messages)
+    return "User dashboard"
 
-@app.route("/upload", methods=["POST"])
-@login_required
-def upload_order():
-    files = request.files.getlist("file")
-    saved = []
-
-    for f in files:
-        name = secure_filename(f.filename)
-        f.save(os.path.join(app.config["UPLOAD_FOLDER"], name))
-        saved.append(name)
-
-    mongo.db.orders.insert_one({
-        "client": session["user"],
-        "files": saved,
-        "status": "Received",
-        "progress": 0
-    })
-    return redirect(url_for("dashboard"))
-
-# --- ADMIN ---
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
-    users = list(mongo.db.users.find())
-    orders = list(mongo.db.orders.find())
-    messages = {}
-    for order in orders:
-        messages[str(order["_id"])] = list(mongo.db.messages.find({"order_id": order["_id"]}).sort("created", 1))
-    return render_template("admin.html", users=users, orders=orders, messages=messages)
-
-@app.route("/admin/order/delete/<order_id>", methods=["POST"])
-@admin_required
-def admin_delete_order(order_id):
-    mongo.db.orders.delete_one({"_id": ObjectId(order_id)})
-    mongo.db.messages.delete_many({"order_id": ObjectId(order_id)})
-    return redirect(url_for("admin_dashboard"))
-
-@app.route("/admin/user/delete/<user_id>", methods=["POST"])
-@admin_required
-def admin_delete_user(user_id):
-    user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
-    if user and user["username"] != session["user"]:
-        mongo.db.users.delete_one({"_id": ObjectId(user_id)})
-        mongo.db.orders.delete_many({"client": user["username"]})
-    return redirect(url_for("admin_dashboard"))
-
-# --- MESSAGES ---
-@app.route("/message/send", methods=["POST"])
-@login_required
-def send_message():
-    mongo.db.messages.insert_one({
-        "order_id": ObjectId(request.form.get("order_id")),
-        "from": session["user"],
-        "to": request.form.get("to"),
-        "text": request.form.get("text"),
-        "created": datetime.utcnow()
-    })
-    return redirect(request.referrer)
+    return "Admin dashboard"
 
 # ------------------- RUN APP -------------------
 if __name__ == "__main__":

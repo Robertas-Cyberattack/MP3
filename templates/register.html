@@ -1,57 +1,46 @@
 {% extends "base.html" %}
 {% block content %}
 
-<!-- REGISTER PAGE HERO -->
-<div class="hero center-align">
+<div class="hero">
   <h1>Register</h1>
-  <p>Create a new account to access projects and services.</p>
+  <p>Create an account to access your dashboard.</p>
 </div>
 
-<!-- REGISTER FORM SECTION -->
 <div class="section">
   <div class="row">
     <form class="col s12 m6 offset-m3" method="POST" action="{{ url_for('register') }}">
       <div class="card-panel blue lighten-5">
-
-        <!-- Form title -->
         <h5 class="center blue-text text-darken-4">Register</h5>
 
-        <!-- Username -->
         <div class="input-field">
           <i class="material-icons prefix">person</i>
           <input id="username" name="username" type="text" required>
           <label for="username">Username</label>
         </div>
 
-        <!-- Email -->
         <div class="input-field">
           <i class="material-icons prefix">email</i>
           <input id="email" name="email" type="email" required>
           <label for="email">Email</label>
         </div>
 
-        <!-- Phone -->
         <div class="input-field">
           <i class="material-icons prefix">phone</i>
-          <input id="phone" name="phone" type="text">
+          <input id="phone" name="phone" type="text" required>
           <label for="phone">Phone</label>
         </div>
 
-        <!-- Password -->
         <div class="input-field">
           <i class="material-icons prefix">lock</i>
           <input id="password" name="password" type="password" required>
           <label for="password">Password</label>
         </div>
 
-        <!-- Submit button -->
         <button class="btn blue darken-2 col s12" type="submit">Register</button>
 
-        <!-- Optional link -->
         <div class="center-align" style="margin-top: 20px;">
           <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
         </div>
-
       </div>
     </form>
   </div>

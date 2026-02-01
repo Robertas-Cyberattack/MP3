@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="hero center-align">
+<div class="hero">
   <h1>Precision Drafting & Engineering</h1>
   <p>
     Professional CAD drafting and construction documentation for the UK & Europe.<br>
@@ -11,25 +11,21 @@
 
 <div class="section">
   <div class="row">
-    
-    <!-- Image -->
+
     <div class="col s12 m6">
-      <img src="{{ url_for('static', filename='images/cad_drafting.jpg') }}"
-           alt="Engineering Drafting"
-           class="responsive-img"
-           style="border-radius:10px;">
+      <img src="{{ url_for('static', filename='images/cad_drafting.jpg') }}" alt="Engineering Drafting" class="responsive-img" style="border-radius:10px;">
     </div>
 
-    <!-- Company Description -->
     <div class="col s12 m6">
       <h4>Who We Are</h4>
       <p>
         Precision Drafting & Engineering provides accurate, reliable, and fully compliant
         CAD drafting services for residential, commercial, and infrastructure projects.
+      </p>
+      <p>
         Our engineers hold accredited Civil Engineering degrees and bring real-world
         project experience across the UK and Europe.
       </p>
-
       <p>
         We support architects, contractors, and developers with clear construction
         drawings that reduce errors, save time, and meet all regulatory requirements.

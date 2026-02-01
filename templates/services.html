@@ -1,37 +1,26 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="hero center-align">
+<div class="hero center-align" style="margin-bottom: 40px;">
   <h1>Our Services</h1>
   <p>Professional drafting and engineering solutions tailored to your project.</p>
 </div>
 
 <div class="section">
-  <div class="row">
-
-    {% set services = [
-      ("CAD Drafting","placeholder.jpg","Architectural & construction drawings."),
-      ("Structural Drawings","placeholder.jpg","Eurocode-compliant structural layouts."),
-      ("Civil Engineering","placeholder.jpg","Drainage, levels & infrastructure."),
-      ("MEP Coordination","placeholder.jpg","Mechanical, electrical & plumbing."),
-      ("Interior Layouts","placeholder.jpg","Office & residential interiors."),
-      ("Construction Docs","placeholder.jpg","Build-ready documentation.")
-    ] %}
-
-    {% for title, img, desc in services %}
+  <div class="row equal-height">
+    {% for service in services %}
     <div class="col s12 m6 l4">
       <div class="card hoverable">
         <div class="card-image">
-          <img src="{{ url_for('static', filename='images/' ~ img) }}">
+          <img src="{{ url_for('static', filename='images/' ~ service.image) }}" class="responsive-img">
         </div>
         <div class="card-content center-align">
-          <span class="card-title">{{ title }}</span>
-          <p>{{ desc }}</p>
+          <span class="card-title">{{ service.title }}</span>
+          <p>{{ service.description }}</p>
         </div>
       </div>
     </div>
     {% endfor %}
-
   </div>
 </div>
 
