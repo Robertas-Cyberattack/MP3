@@ -56,10 +56,11 @@
   </div>
 </div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBAjtVjxOS9vlEobgfQf_BqgiAyvCJk1fw&callback=initMap"></script>
+
 <script>
 function initMap() {
-  var location = {lat: 51.5074, lng: -0.1278};
+  var location = {lat: 51.0211, lng: 3.1047};
   var map = new google.maps.Map(document.getElementById("map"), {
     zoom: 12,
     center: location
