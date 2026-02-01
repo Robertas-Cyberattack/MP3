@@ -6,6 +6,7 @@ from werkzeug.utils import secure_filename
 from bson.objectid import ObjectId
 from functools import wraps
 from datetime import datetime
+from flask_mail import Mail, Message
 
 # Load environment variables if env.py exists
 if os.path.exists("env.py"):
@@ -13,14 +14,26 @@ if os.path.exists("env.py"):
 
 # ------------------- APP SETUP -------------------
 app = Flask(__name__)
-app.config["MONGO_URI"] = os.environ.get("MONGO_URI", "mongodb://localhost:27017/precisiondb")
-app.secret_key = os.environ.get("SECRET_KEY", "super-secret-key")
 
+# ------------------- MAIL SETUP -------------------
+app.config["MAIL_SERVER"] = "smtp.sendgrid.net"
+app.config["MAIL_PORT"] = 587
+app.config["MAIL_USE_TLS"] = True
+app.config["MAIL_USERNAME"] = "apikey"
+app.config["MAIL_PASSWORD"] = os.environ.get("SENDGRID_API_KEY")
+# BŪTINAI naudok patvirtintą el. paštą SendGrid'e
+app.config["MAIL_DEFAULT_SENDER"] = "robertas.sladkevicius@gmail.com"
+mail = Mail(app)
+
+# ------------------- MONGODB SETUP -------------------
+app.config["MONGO_URI"] = os.environ.get("MONGO_URI", "mongodb://localhost:27017/precisiondb")
+mongo = PyMongo(app)
+
+# ------------------- SECRET KEY & UPLOADS -------------------
+app.secret_key = os.environ.get("SECRET_KEY", "super-secret-key")
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
-mongo = PyMongo(app)
 
 # ------------------- DECORATORS -------------------
 def login_required(f):
@@ -39,7 +52,44 @@ def admin_required(f):
         return f(*args, **kwargs)
     return wrap
 
-# ------------------- AUTH -------------------
+# ------------------- ROUTES -------------------
+
+# --- CONTACT FORM ---
+@app.route("/contact/send", methods=["POST"])
+def contact_send():
+    data = {
+        "name": request.form.get("name"),
+        "email": request.form.get("email"),
+        "mobile": request.form.get("mobile"),
+        "message": request.form.get("message"),
+        "created": datetime.utcnow()
+    }
+
+    mongo.db.contact_messages.insert_one(data)
+
+    try:
+        msg = Message(
+            subject="New Contact Form Message",
+            sender=app.config["MAIL_DEFAULT_SENDER"],
+            recipients=["robertas.sladkevicius@gmail.com"],  # patvirtintas el. paštas
+            body=f"""
+Name: {data['name']}
+Email: {data['email']}
+Mobile: {data['mobile']}
+
+Message:
+{data['message']}
+"""
+        )
+        mail.send(msg)
+        flash("Message sent successfully!")
+    except Exception as e:
+        print("EMAIL ERROR:", e)
+        flash("Failed to send email. Check SendGrid settings.")
+
+    return redirect(url_for("contact"))
+
+# --- AUTH ---
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -48,12 +98,10 @@ def register():
         phone = request.form.get("phone")
         password = generate_password_hash(request.form.get("password"))
 
-        # Check if username exists
         if mongo.db.users.find_one({"username": username}):
             flash("Username already exists")
             return redirect(url_for("register"))
 
-        # Insert user
         mongo.db.users.insert_one({
             "username": username,
             "email": email,
@@ -88,7 +136,7 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-# ------------------- PAGES -------------------
+# --- PAGES ---
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -104,36 +152,12 @@ def contact():
 @app.route("/projects")
 def projects():
     projects_list = [
-        {
-            "title": "Residential building extension",
-            "description": "Residential building extension project including detailed CAD drawings and construction documentation.",
-            "image": "project1.jpg"
-        },
-        {
-            "title": "I beam calculation",
-            "description": "Structural I-beam calculation and installation design for a wall removal project",
-            "image": "project2.jpg"
-        },
-        {
-            "title": "Commercial fit-out",
-            "description": "Commercial layout drawings and material requirement estimation",
-            "image": "project3.jpg"
-        },
-        {
-            "title": "Industrial Warehouse",
-            "description": "Large-span warehouse structural and layout drawings.",
-            "image": "project4.jpg"
-        },
-        {
-            "title": "Foundation Design",
-            "description": "Reinforced concrete foundation plans and sections.",
-            "image": "project5.jpg"
-        },
-        {
-            "title": "Renovation Project",
-            "description": "As-built drawings and renovation documentation.",
-            "image": "project6.jpg"
-        },
+        {"title": "Residential building extension", "description": "Residential building extension project including detailed CAD drawings and construction documentation.", "image": "project1.jpg"},
+        {"title": "I beam calculation", "description": "Structural I-beam calculation and installation design for a wall removal project", "image": "project2.jpg"},
+        {"title": "Commercial fit-out", "description": "Commercial layout drawings and material requirement estimation", "image": "project3.jpg"},
+        {"title": "Industrial Warehouse", "description": "Large-span warehouse structural and layout drawings.", "image": "project4.jpg"},
+        {"title": "Foundation Design", "description": "Reinforced concrete foundation plans and sections.", "image": "project5.jpg"},
+        {"title": "Renovation Project", "description": "As-built drawings and renovation documentation.", "image": "project6.jpg"},
     ]
     return render_template("projects.html", projects=projects_list)
 
@@ -145,16 +169,14 @@ def services():
     ]
     return render_template("services.html", services=services_list)
 
-# ------------------- DASHBOARD -------------------
+# --- DASHBOARD ---
 @app.route("/dashboard")
 @login_required
 def dashboard():
     orders = list(mongo.db.orders.find({"client": session["user"]}))
     messages = {}
     for order in orders:
-        messages[str(order["_id"])] = list(
-            mongo.db.messages.find({"order_id": order["_id"]}).sort("created", 1)
-        )
+        messages[str(order["_id"])] = list(mongo.db.messages.find({"order_id": order["_id"]}).sort("created", 1))
     return render_template("dashboard.html", orders=orders, messages=messages)
 
 @app.route("/upload", methods=["POST"])
@@ -176,7 +198,7 @@ def upload_order():
     })
     return redirect(url_for("dashboard"))
 
-# ------------------- ADMIN -------------------
+# --- ADMIN ---
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
@@ -184,9 +206,7 @@ def admin_dashboard():
     orders = list(mongo.db.orders.find())
     messages = {}
     for order in orders:
-        messages[str(order["_id"])] = list(
-            mongo.db.messages.find({"order_id": order["_id"]}).sort("created", 1)
-        )
+        messages[str(order["_id"])] = list(mongo.db.messages.find({"order_id": order["_id"]}).sort("created", 1))
     return render_template("admin.html", users=users, orders=orders, messages=messages)
 
 @app.route("/admin/order/delete/<order_id>", methods=["POST"])
@@ -205,7 +225,7 @@ def admin_delete_user(user_id):
         mongo.db.orders.delete_many({"client": user["username"]})
     return redirect(url_for("admin_dashboard"))
 
-# ------------------- MESSAGES -------------------
+# --- MESSAGES ---
 @app.route("/message/send", methods=["POST"])
 @login_required
 def send_message():
