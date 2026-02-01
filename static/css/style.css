@@ -7,8 +7,16 @@
 }
 
 .card {
+  display: flex;
   margin-bottom: 20px;
+  flex-direction: column;
+  min-height: 350px; /* arba kitas tinkamas aukštis */
 }
+
+.card-content {
+  flex-grow: 1;
+}
+
 
 .progress {
   height: 10px;

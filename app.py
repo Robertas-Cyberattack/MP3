@@ -110,7 +110,7 @@ def projects():
             "image": "project1.jpg"
         },
         {
-            "title": "I beam calculation”",
+            "title": "I beam calculation",
             "description": "Structural I-beam calculation and installation design for a wall removal project",
             "image": "project2.jpg"
         },
