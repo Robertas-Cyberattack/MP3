@@ -104,8 +104,36 @@ def contact():
 @app.route("/projects")
 def projects():
     projects_list = [
-        {"title": "Project A", "description": "Description for Project A", "image": "project_a.jpg"},
-        {"title": "Project B", "description": "Description for Project B", "image": "project_b.jpg"},
+        {
+            "title": "Residential building extension",
+            "description": "Residential building extension project including detailed CAD drawings and construction documentation.",
+            "image": "project1.jpg"
+        },
+        {
+            "title": "I beam calculation”",
+            "description": "Structural I-beam calculation and installation design for a wall removal project",
+            "image": "project2.jpg"
+        },
+        {
+            "title": "Commercial fit-out",
+            "description": "Commercial layout drawings and material requirement estimation",
+            "image": "project3.jpg"
+        },
+        {
+            "title": "Industrial Warehouse",
+            "description": "Large-span warehouse structural and layout drawings.",
+            "image": "project4.jpg"
+        },
+        {
+            "title": "Foundation Design",
+            "description": "Reinforced concrete foundation plans and sections.",
+            "image": "project5.jpg"
+        },
+        {
+            "title": "Renovation Project",
+            "description": "As-built drawings and renovation documentation.",
+            "image": "project6.jpg"
+        },
     ]
     return render_template("projects.html", projects=projects_list)
 

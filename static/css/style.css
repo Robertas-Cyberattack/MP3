@@ -1,10 +1,9 @@
+/* ===============================
+   GLOBAL
+================================ */
+
 .hero {
   padding: 60px 20px;
-}
-
-.brand-logo {
-  font-size: 1.3rem;
-  white-space: nowrap;
 }
 
 .card {
@@ -15,84 +14,50 @@
   height: 10px;
 }
 
-/* === NAVBAR FIX === */
-nav .brand-logo {
-  max-width: calc(100% - 64px); /* vieta hamburgeriui */
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+/* ===============================
+   NAVBAR – STABILUS SPRENDIMAS
+================================ */
 
-/* kai hamburgeris ATSIRANDA (Materialize breakpoint) */
-@media (max-width: 992px) {
-  nav .brand-logo {
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 1.1rem;
-  }
-}
-
-/* labai maži ekranai */
-@media (max-width: 600px) {
-  nav .brand-logo {
-    font-size: 1rem;
-  }
-}
-
-/* ===== MATERIALIZE NAVBAR FIX ===== */
-
-/* Desktop – viskas ok */
-nav .brand-logo {
-  position: relative;
-}
-
-/* Kai ATSIRANDA hamburgeris (Materialize <= 992px) */
-@media (max-width: 992px) {
-  nav .brand-logo {
-    position: absolute;
-    left: 64px;              /* atitraukiam nuo hamburgerio */
-    transform: none;         /* NUIMAM centrinimą */
-    font-size: 1.1rem;
-    white-space: nowrap;
-  }
-}
-
-/* Maži ekranai */
-@media (max-width: 600px) {
-  nav .brand-logo {
-    font-size: 1rem;
-  }
-}
-
-/* ===== OVERRIDE MATERIALIZE NAVBAR LAYOUT ===== */
-
-nav .nav-wrapper {
-  display: flex;
-  align-items: center;
+nav {
+  height: 72px;
+  line-height: 72px;
 }
 
 /* hamburger */
 nav .sidenav-trigger {
-  position: relative;
-  margin-right: 12px;
+  height: 72px;
+  line-height: 72px;
 }
 
-/* logo */
+/* logo tekstas */
 nav .brand-logo {
-  position: static !important;   /* NUŽUDOM absolute */
-  transform: none !important;
-  white-space: nowrap;
+  position: relative;
+  left: 0;
+  transform: none;
+  padding-left: 56px; /* vieta hamburgeriui */
   font-size: 1.3rem;
+  white-space: nowrap;
 }
 
-/* kai hamburgeris aktyvus */
+/* tablet + mobile */
 @media (max-width: 992px) {
   nav .brand-logo {
     font-size: 1.1rem;
   }
 }
 
-/* maži ekranai */
+/* small mobile */
 @media (max-width: 600px) {
+  nav {
+    height: 64px;
+    line-height: 64px;
+  }
+
+  nav .sidenav-trigger {
+    height: 64px;
+    line-height: 64px;
+  }
+
   nav .brand-logo {
     font-size: 1rem;
   }
