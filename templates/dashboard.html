@@ -1,75 +1,44 @@
-{% extends "base.html" %}
-{% block content %}
+<h4>My Orders</h4>
 
-<h4>My Orders & Messages</h4>
-
+<!-- UPLOAD FORM -->
 <div class="card">
   <div class="card-content">
     <form method="POST" action="{{ url_for('upload_order') }}" enctype="multipart/form-data">
-      <div class="file-field input-field">
-        <div class="btn blue">
-          <span>Upload Files</span>
-          <input type="file" name="file" multiple required>
-        </div>
-        <div class="file-path-wrapper">
-          <input class="file-path validate" type="text">
-        </div>
-      </div>
-      <button class="btn blue darken-2">Submit Order</button>
-    </form>
+@@ -21,11 +20,9 @@ <h4>My Orders</h4>
   </div>
 </div>
 
+<!-- ORDERS LIST -->
 {% for order in orders %}
 <div class="card">
   <div class="card-content">
 
-    <p><strong>Status:</strong> {{ order.status }} |
-       <strong>Progress:</strong> {{ order.progress }}%</p>
+    <p><strong>Status:</strong> {{ order.status }}</p>
+    <p><strong>Progress:</strong> {{ order.progress }}%</p>
 
-    <div class="progress">
-      <div class="determinate" style="width: {{ order.progress }}%"></div>
+@@ -34,15 +31,11 @@ <h4>My Orders</h4>
     </div>
 
     <hr>
 
     <p><strong>Files:</strong></p>
+    {% for file in order.files %}
+      <p>📄 {{ file }}</p>
     {% for f in order.file %}
       <p>📄 {{ f }}</p>
     {% endfor %}
 
-    <hr>
+    <br>
 
-    <h6>Messages with Admin</h6>
-
-    <div style="max-height:300px; overflow-y:auto; border:1px solid #ddd; padding:10px;">
-      {% for msg in order.messages %}
-        <div style="margin-bottom:8px; text-align:{% if msg.from == session.user %}right{% else %}left{% endif %};">
-          <span style="display:inline-block; padding:8px 12px;
-            background:{% if msg.from == session.user %}#1976d2;color:white{% else %}#eee{% endif %};
-            border-radius:12px;">
-            <small>{{ msg.from }}</small><br>
-            {{ msg.text }}
-          </span>
-        </div>
-      {% else %}
-        <p class="grey-text">No messages yet.</p>
-      {% endfor %}
-    </div>
-
-    <form method="POST" action="{{ url_for('send_message') }}" style="margin-top:10px;">
-      <input type="hidden" name="order_id" value="{{ order._id }}">
-      <input type="hidden" name="to" value="admin">
-      <div class="input-field">
-        <input name="text" placeholder="Type message..." required>
-      </div>
-      <button class="btn blue">Send</button>
+    <!-- DELETE BUTTON -->
+    <form method="POST"
+          action="{{ url_for('delete_order', order_id=order._id) }}"
+          onsubmit="return confirm('Delete this order permanently?');">
+@@ -51,7 +44,6 @@ <h4>My Orders</h4>
+        Delete Order
+      </button>
     </form>
 
   </div>
 </div>
 {% else %}
-<p>No orders yet.</p>
-{% endfor %}
-
-{% endblock %}
