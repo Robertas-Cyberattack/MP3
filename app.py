@@ -145,7 +145,19 @@ def logout():
 @login_required
 def dashboard():
     orders = list(mongo.db.orders.find({"clientno": session["user"]}))
-    return render_template("dashboard.html", orders=orders)
+
+    # Fetch messages for each order
+    orders_with_msgs = []
+    for order in orders:
+        msgs = list(mongo.db.contact_messages.find({
+            "order_id": str(order["_id"]),
+            "to": session["user"]
+        }))
+        order["messages"] = msgs
+        orders_with_msgs.append(order)
+
+    return render_template("dashboard.html", orders=orders_with_msgs)
+
 
 @app.route("/upload_order", methods=["POST"])
 @login_required
