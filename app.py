@@ -2,13 +2,12 @@ import os
 from flask import Flask, render_template, redirect, request, session, url_for, flash
 from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 from bson.objectid import ObjectId
 from functools import wraps
 from datetime import datetime
 from flask_mail import Mail, Message
 
-# Load environment variables if env.py exists
+# Load environment variables if exists
 if os.path.exists("env.py"):
     import env
 
@@ -25,7 +24,10 @@ app.config["MAIL_DEFAULT_SENDER"] = "robertas.sladkevicius@gmail.com"
 mail = Mail(app)
 
 # ------------------- MONGODB SETUP -------------------
-app.config["MONGO_URI"] = os.environ.get("MONGO_URI", "mongodb://localhost:27017/precisiondb")
+app.config["MONGO_URI"] = os.environ.get(
+    "MONGO_URI",
+    "mongodb+srv://robertsladkevicius_db_user1:user1Milijonas2030@cadcluster.5ffsvzf.mongodb.net/CADDB?retryWrites=true&w=majority"
+)
 mongo = PyMongo(app)
 
 # ------------------- SECRET KEY & UPLOADS -------------------
@@ -47,6 +49,7 @@ def admin_required(f):
     @wraps(f)
     def wrap(*args, **kwargs):
         if session.get("role") != "admin":
+            flash("Admin access required")
             return redirect(url_for("home"))
         return f(*args, **kwargs)
     return wrap
@@ -79,22 +82,16 @@ def contact_send():
             subject="New Contact Form Message",
             sender=app.config["MAIL_DEFAULT_SENDER"],
             recipients=["robertas.sladkevicius@gmail.com"],
-            body=f"""
-Name: {data['name']}
-Email: {data['email']}
-Mobile: {data['mobile']}
-
-Message:
-{data['message']}
-"""
+            body=f"Name: {data['name']}\nEmail: {data['email']}\nMobile: {data['mobile']}\n\nMessage:\n{data['message']}"
         )
         mail.send(msg)
         flash("Message sent successfully!")
     except Exception as e:
         print("EMAIL ERROR:", e)
-        flash("Failed to send email. Check SendGrid settings.")
+        flash("Failed to send email.")
     return redirect(url_for("contact"))
 
+# ------------------- REGISTER / LOGIN -------------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -112,11 +109,11 @@ def register():
             "email": email,
             "phone": phone,
             "password": password,
-            "role": "user"
+            "role": "client",
+            "lock": False
         })
         flash("Account created! Please log in.")
         return redirect(url_for("login"))
-
     return render_template("register.html")
 
 @app.route("/login", methods=["GET", "POST"])
@@ -124,12 +121,13 @@ def login():
     if request.method == "POST":
         username = request.form.get("username").lower()
         password = request.form.get("password")
-
         user = mongo.db.users.find_one({"username": username})
+
         if user and check_password_hash(user["password"], password):
             session["user"] = user["username"]
             session["role"] = user["role"]
-            return redirect(url_for("admin_dashboard") if user["role"] == "admin" else url_for("dashboard"))
+            flash(f"Welcome {user['username']}!")
+            return redirect(url_for("admin_dashboard") if user["role"]=="admin" else url_for("dashboard"))
 
         flash("Invalid username or password")
         return redirect(url_for("login"))
@@ -139,8 +137,93 @@ def login():
 @app.route("/logout")
 def logout():
     session.clear()
+    flash("Logged out successfully.")
     return redirect(url_for("login"))
 
+# ------------------- DASHBOARD -------------------
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    orders = list(mongo.db.orders.find({"clientno": session["user"]}))
+    return render_template("dashboard.html", orders=orders)
+
+@app.route("/upload_order", methods=["POST"])
+@login_required
+def upload_order():
+    files = request.files.getlist("file")
+    filenames = []
+    for f in files:
+        filename = f"{datetime.utcnow().timestamp()}_{f.filename}"
+        f.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+        filenames.append(filename)
+
+    mongo.db.orders.insert_one({
+        "clientno": session["user"],
+        "status": "Pending",
+        "progress": 0,
+        "file": filenames,
+        "comments": "",
+        "date": datetime.utcnow()
+    })
+    flash("Order uploaded!")
+    return redirect(url_for("dashboard"))
+
+@app.route("/delete_order/<order_id>", methods=["POST"])
+@login_required
+def delete_order(order_id):
+    mongo.db.orders.delete_one({"_id": ObjectId(order_id), "clientno": session["user"]})
+    flash("Order deleted")
+    return redirect(url_for("dashboard"))
+
+# ------------------- ADMIN DASHBOARD -------------------
+@app.route("/admin")
+@admin_required
+def admin_dashboard():
+    orders = list(mongo.db.orders.find())
+    users = list(mongo.db.users.find())
+    # prepare messages dict
+    messages = {}
+    for order in orders:
+        msgs = list(mongo.db.contact_messages.find({"order_id": str(order["_id"])}))
+        messages[str(order["_id"])] = msgs
+    return render_template("admin.html", orders=orders, users=users, messages=messages)
+
+@app.route("/admin/delete_order/<order_id>", methods=["POST"])
+@admin_required
+def admin_delete_order(order_id):
+    mongo.db.orders.delete_one({"_id": ObjectId(order_id)})
+    mongo.db.contact_messages.delete_many({"order_id": order_id})
+    flash("Order and messages deleted")
+    return redirect(url_for("admin_dashboard"))
+
+@app.route("/admin/delete_user/<user_id>", methods=["POST"])
+@admin_required
+def admin_delete_user(user_id):
+    user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+    if user:
+        mongo.db.orders.delete_many({"clientno": user["username"]})
+        mongo.db.users.delete_one({"_id": ObjectId(user_id)})
+        flash("User and orders deleted")
+    return redirect(url_for("admin_dashboard"))
+
+@app.route("/send_message", methods=["POST"])
+@login_required
+def send_message():
+    order_id = request.form.get("order_id")
+    text = request.form.get("text")
+    to_user = request.form.get("to")
+
+    mongo.db.contact_messages.insert_one({
+        "from": session["user"],
+        "to": to_user,
+        "text": text,
+        "order_id": order_id,
+        "created": datetime.utcnow()
+    })
+    flash("Message sent!")
+    return redirect(request.referrer or url_for("dashboard"))
+
+# ------------------- OTHER PAGES -------------------
 @app.route("/projects")
 def projects():
     projects_list = [
@@ -164,17 +247,6 @@ def services():
         {"title": "Construction Docs", "description": "Build-ready documentation.", "image": "docs.jpg"},
     ]
     return render_template("services.html", services=services_list)
-
-# Dashboard routes placeholders
-@app.route("/dashboard")
-@login_required
-def dashboard():
-    return "User dashboard"
-
-@app.route("/admin")
-@admin_required
-def admin_dashboard():
-    return "Admin dashboard"
 
 # ------------------- RUN APP -------------------
 if __name__ == "__main__":

@@ -3,7 +3,6 @@
 
 <h4>My Orders</h4>
 
-<!-- UPLOAD FORM -->
 <div class="card">
   <div class="card-content">
     <form method="POST" action="{{ url_for('upload_order') }}" enctype="multipart/form-data">
@@ -21,11 +20,9 @@
   </div>
 </div>
 
-<!-- ORDERS LIST -->
 {% for order in orders %}
 <div class="card">
   <div class="card-content">
-
     <p><strong>Status:</strong> {{ order.status }}</p>
     <p><strong>Progress:</strong> {{ order.progress }}%</p>
 
@@ -34,15 +31,11 @@
     </div>
 
     <hr>
-
     <p><strong>Files:</strong></p>
-    {% for file in order.files %}
-      <p>📄 {{ file }}</p>
+    {% for f in order.file %}
+      <p>📄 {{ f }}</p>
     {% endfor %}
 
-    <br>
-
-    <!-- DELETE BUTTON -->
     <form method="POST"
           action="{{ url_for('delete_order', order_id=order._id) }}"
           onsubmit="return confirm('Delete this order permanently?');">
@@ -51,7 +44,6 @@
         Delete Order
       </button>
     </form>
-
   </div>
 </div>
 {% else %}
