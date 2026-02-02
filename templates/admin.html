@@ -1,62 +1,79 @@
 {% extends "base.html" %}
 {% block content %}
-
 <div class="row">
-  <div class="col s12">
-    <ul class="tabs">
-      <li class="tab col s6"><a class="active" href="#orders">Orders</a></li>
-      <li class="tab col s6"><a href="#users">Users</a></li>
-    </ul>
-  </div>
+    <div class="col s12">
+        <ul class="tabs">
+            <li class="tab col s6"><a class="active" href="#orders">Orders & Messages</a></li>
+            <li class="tab col s6"><a href="#users">User Management</a></li>
+        </ul>
+    </div>
 
-  <!-- ORDERS TAB -->
-  <div id="orders" class="col s12">
-    <h4>Orders & Messages</h4>
+    <div id="orders" class="col s12">
+        {% for order in orders %}
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Order for {{ order.clientno }}</span>
+                <p>Status: <b>{{ order.status }}</b> | Progress: {{ order.progress }}%</p>
+                
+                <h6>Conversation</h6>
+                <div class="grey lighten-4" style="padding: 10px; border-radius: 5px;">
+                    {% for msg in messages[order._id|string] %}
+                        <p><b>{{ msg['from'] }}:</b> {{ msg['text'] }}</p>
+                    {% else %}
+                        <p class="grey-text">No messages yet.</p>
+                    {% endfor %}
+                </div>
 
-    {% for order in orders %}
-    <div class="card">
-      <div class="card-content">
-        <p><strong>Client:</strong> {{ order.client }}</p>
-        <p><strong>Client:</strong> {{ order.clientno }}</p>
-        <p>Status: {{ order.status }} | {{ order.progress }}%</p>
-
-        <form method="POST"
-@@ -26,20 +24,16 @@
-        </form>
-
-        <hr>
-
-        <h6>Messages</h6>
-        {% for msg in messages[order._id|string] %}
-          <p>
-            <strong>{{ msg.from }}:</strong>
-            {{ msg.text }}
-          </p>
-          <p><strong>{{ msg['from'] }}:</strong> {{ msg['text'] }}</p>
-        {% else %}
-          <p class="grey-text">No messages yet.</p>
+                <form method="POST" action="{{ url_for('send_message') }}" style="margin-top:15px;">
+                    <input type="hidden" name="order_id" value="{{ order._id }}">
+                    <input type="hidden" name="to" value="{{ order.clientno }}">
+                    <div class="input-field">
+                        <input name="text" placeholder="Reply to client..." required>
+                        <button class="btn blue btn-small">Reply</button>
+                    </div>
+                </form>
+            </div>
+        </div>
         {% endfor %}
+    </div>
 
-        <form method="POST" action="{{ url_for('send_message') }}">
-          <input type="hidden" name="order_id" value="{{ order._id }}">
-          <input type="hidden" name="to" value="{{ order.client }}">
-          <input type="hidden" name="to" value="{{ order.clientno }}">
-          <div class="input-field">
-            <input name="text" placeholder="Message about this order" required>
-          </div>
-@@ -51,15 +45,12 @@
-    {% endfor %}
-  </div>
+    <div id="users" class="col s12">
+        <table class="highlight">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.role }}</td>
+                    <td>{{ "Blocked" if user.lock else "Active" }}</td>
+                    <td>
+                        {% if user.username != session.user %}
+                        <form action="{{ url_for('toggle_block', user_id=user._id) }}" method="POST" style="display:inline;">
+                            <button class="btn-small orange">{{ "Unblock" if user.lock else "Block" }}</button>
+                        </form>
+                        <form action="{{ url_for('admin_delete_user', user_id=user._id) }}" method="POST" style="display:inline;">
+                            <button class="btn-small red">Delete</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
-  <!-- USERS TAB -->
-  <div id="users" class="col s12">
-    <h4>Users</h4>
-
-    {% for user in users %}
-    <div class="card">
-      <div class="card-content">
-        <p><strong>{{ user.username }}</strong> ({{ user.role }})</p>
-
-        {% if user.username != session.user %}
-        <form method="POST"
-              action="{{ url_for('admin_delete_user', user_id=user._id) }}"
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var el = document.querySelectorAll('.tabs');
+        M.Tabs.init(el);
+    });
+</script>
+{% endblock %}
