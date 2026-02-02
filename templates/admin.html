@@ -3,8 +3,8 @@
 <div class="row">
     <div class="col s12">
         <ul class="tabs">
-            <li class="tab col s6"><a class="active" href="#orders">Orders & Messages</a></li>
-            <li class="tab col s6"><a href="#users">User Management</a></li>
+            <li class="tab col s6"><a class="active" href="#orders">Užsakymai ir Žinutės</a></li>
+            <li class="tab col s6"><a href="#users">Vartotojai</a></li>
         </ul>
     </div>
 
@@ -12,24 +12,24 @@
         {% for order in orders %}
         <div class="card">
             <div class="card-content">
-                <span class="card-title">Order for {{ order.clientno }}</span>
-                <p>Status: <b>{{ order.status }}</b> | Progress: {{ order.progress }}%</p>
+                <span class="card-title">Užsakymas: {{ order.clientno }}</span>
+                <p>Statusas: <b>{{ order.status }}</b></p>
                 
-                <h6>Conversation</h6>
-                <div class="grey lighten-4" style="padding: 10px; border-radius: 5px;">
+                <h6>Susirašinėjimas:</h6>
+                <div class="grey lighten-4" style="padding: 10px; margin-bottom: 10px;">
                     {% for msg in messages[order._id|string] %}
-                        <p><b>{{ msg['from'] }}:</b> {{ msg['text'] }}</p>
+                        <p><strong>{{ msg['from'] }}:</strong> {{ msg['text'] }}</p>
                     {% else %}
-                        <p class="grey-text">No messages yet.</p>
+                        <p>Žinučių nėra.</p>
                     {% endfor %}
                 </div>
 
-                <form method="POST" action="{{ url_for('send_message') }}" style="margin-top:15px;">
+                <form method="POST" action="{{ url_for('send_message') }}">
                     <input type="hidden" name="order_id" value="{{ order._id }}">
                     <input type="hidden" name="to" value="{{ order.clientno }}">
                     <div class="input-field">
-                        <input name="text" placeholder="Reply to client..." required>
-                        <button class="btn blue btn-small">Reply</button>
+                        <input name="text" placeholder="Rašyti klientui..." required>
+                        <button class="btn blue">Siųsti</button>
                     </div>
                 </form>
             </div>
@@ -38,13 +38,13 @@
     </div>
 
     <div id="users" class="col s12">
-        <table class="highlight">
+        <table class="striped">
             <thead>
                 <tr>
-                    <th>Username</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th>Vardas</th>
+                    <th>Rolė</th>
+                    <th>Būsena</th>
+                    <th>Veiksmai</th>
                 </tr>
             </thead>
             <tbody>
@@ -52,14 +52,14 @@
                 <tr>
                     <td>{{ user.username }}</td>
                     <td>{{ user.role }}</td>
-                    <td>{{ "Blocked" if user.lock else "Active" }}</td>
+                    <td>{{ "Blokuotas" if user.lock else "Aktyvus" }}</td>
                     <td>
                         {% if user.username != session.user %}
                         <form action="{{ url_for('toggle_block', user_id=user._id) }}" method="POST" style="display:inline;">
-                            <button class="btn-small orange">{{ "Unblock" if user.lock else "Block" }}</button>
+                            <button class="btn-small orange">{{ "Atblokuoti" if user.lock else "Blokuoti" }}</button>
                         </form>
                         <form action="{{ url_for('admin_delete_user', user_id=user._id) }}" method="POST" style="display:inline;">
-                            <button class="btn-small red">Delete</button>
+                            <button class="btn-small red" onclick="return confirm('Tikrai trinti?')">Trinti</button>
                         </form>
                         {% endif %}
                     </td>
@@ -72,8 +72,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var el = document.querySelectorAll('.tabs');
-        M.Tabs.init(el);
+        M.Tabs.init(document.querySelectorAll('.tabs'));
     });
 </script>
 {% endblock %}

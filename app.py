@@ -8,12 +8,12 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# --- CONFIGURATION ---
-app.config["MONGO_URI"] = os.environ.get("MONGO_URI", "your_mongodb_uri_here")
-app.secret_key = os.environ.get("SECRET_KEY", "super-secret-key")
+# --- KONFIGŪRACIJA ---
+app.config["MONGO_URI"] = "mongodb+srv://robertsladkevicius_db_user1:user1Milijonas2030@cadcluster.5ffsvzf.mongodb.net/CADDB?retryWrites=true&w=majority"
+app.secret_key = "super-secret-key"
 mongo = PyMongo(app)
 
-# --- DECORATORS ---
+# --- APSAUGA (DECORATORS) ---
 def login_required(f):
     @wraps(f)
     def wrap(*args, **kwargs):
@@ -26,28 +26,36 @@ def admin_required(f):
     @wraps(f)
     def wrap(*args, **kwargs):
         if session.get("role") != "admin":
-            flash("Admin access required")
+            flash("Tik administratoriui!")
             return redirect(url_for("home"))
         return f(*args, **kwargs)
     return wrap
 
-# --- AUTH ROUTES ---
+# --- PAGRINDINIAI PUSLAPIAI ---
+@app.route("/")
+def home(): return render_template("home.html")
+
+@app.route("/projects")
+def projects(): return render_template("projects.html")
+
+# --- LOGIN / REGISTER ---
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
         username = request.form.get("username").lower().strip()
         if mongo.db.users.find_one({"username": username}):
-            flash("Username already exists")
+            flash("Vartotojas jau egzistuoja")
             return redirect(url_for("register"))
 
         mongo.db.users.insert_one({
             "username": username,
             "email": request.form.get("email"),
+            "phone": request.form.get("phone"),
             "password": generate_password_hash(request.form.get("password")),
             "role": "client",
             "lock": False
         })
-        flash("Registration successful! Please log in.")
+        flash("Registracija sėkminga! Prisijunkite.")
         return redirect(url_for("login"))
     return render_template("register.html")
 
@@ -60,27 +68,31 @@ def login():
 
         if user and check_password_hash(user["password"], password):
             if user.get("lock"):
-                flash("Your account has been blocked. Contact support.")
+                flash("Jūsų paskyra užblokuota!")
                 return redirect(url_for("login"))
             
             session["user"] = user["username"]
-            session["role"] = user["role"]
-            return redirect(url_for("admin_dashboard" if user["role"] == "admin" else "dashboard"))
+            session["role"] = user.get("role", "client")
+            return redirect(url_for("admin_dashboard" if session["role"] == "admin" else "dashboard"))
 
-        flash("Invalid credentials")
+        flash("Neteisingi duomenys")
     return render_template("login.html")
 
-# --- USER DASHBOARD ---
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+# --- KLIENTO PUSLAPIS ---
 @app.route("/dashboard")
 @login_required
 def dashboard():
     orders = list(mongo.db.orders.find({"clientno": session["user"]}))
     for order in orders:
-        # Get all messages for this specific order
         order["messages"] = list(mongo.db.contact_messages.find({"order_id": str(order["_id"])}))
     return render_template("dashboard.html", orders=orders)
 
-# --- ADMIN DASHBOARD ---
+# --- ADMIN FUNKCIJOS ---
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
@@ -91,16 +103,23 @@ def admin_dashboard():
         messages_map[str(order["_id"])] = list(mongo.db.contact_messages.find({"order_id": str(order["_id"])}))
     return render_template("admin.html", orders=orders, users=users, messages=messages_map)
 
+@app.route("/admin/delete_user/<user_id>", methods=["POST"])
+@admin_required
+def admin_delete_user(user_id):
+    mongo.db.users.delete_one({"_id": ObjectId(user_id)})
+    flash("Vartotojas ištrintas")
+    return redirect(url_for("admin_dashboard"))
+
 @app.route("/admin/toggle_block/<user_id>", methods=["POST"])
 @admin_required
 def toggle_block(user_id):
     user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
-    if user:
-        new_status = not user.get("lock", False)
-        mongo.db.users.update_one({"_id": ObjectId(user_id)}, {"$set": {"lock": new_status}})
-        flash(f"User {'blocked' if new_status else 'unblocked'}")
+    new_status = not user.get("lock", False)
+    mongo.db.users.update_one({"_id": ObjectId(user_id)}, {"$set": {"lock": new_status}})
+    flash("Statusas pakeistas")
     return redirect(url_for("admin_dashboard"))
 
+# --- ŽINUTĖS ---
 @app.route("/send_message", methods=["POST"])
 @login_required
 def send_message():
@@ -111,7 +130,7 @@ def send_message():
         "order_id": request.form.get("order_id"),
         "created": datetime.utcnow()
     })
-    flash("Message sent")
+    flash("Žinutė išsiųsta")
     return redirect(request.referrer)
 
 if __name__ == "__main__":
