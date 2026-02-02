@@ -7,14 +7,14 @@ from functools import wraps
 from datetime import datetime
 from flask_mail import Mail, Message
 
-# Load environment variables if exists
+# Load env vars
 if os.path.exists("env.py"):
     import env
 
 # ------------------- APP SETUP -------------------
 app = Flask(__name__)
 
-# ------------------- MAIL SETUP -------------------
+# Mail setup
 app.config["MAIL_SERVER"] = "smtp.sendgrid.net"
 app.config["MAIL_PORT"] = 587
 app.config["MAIL_USE_TLS"] = True
@@ -23,14 +23,14 @@ app.config["MAIL_PASSWORD"] = os.environ.get("SENDGRID_API_KEY")
 app.config["MAIL_DEFAULT_SENDER"] = "robertas.sladkevicius@gmail.com"
 mail = Mail(app)
 
-# ------------------- MONGODB SETUP -------------------
+# MongoDB setup
 app.config["MONGO_URI"] = os.environ.get(
     "MONGO_URI",
     "mongodb+srv://robertsladkevicius_db_user1:user1Milijonas2030@cadcluster.5ffsvzf.mongodb.net/CADDB?retryWrites=true&w=majority"
 )
 mongo = PyMongo(app)
 
-# ------------------- SECRET KEY & UPLOADS -------------------
+# Secret key & uploads
 app.secret_key = os.environ.get("SECRET_KEY", "super-secret-key")
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -95,7 +95,7 @@ def contact_send():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        username = request.form.get("username").lower()
+        username = request.form.get("username")
         email = request.form.get("email")
         phone = request.form.get("phone")
         password = generate_password_hash(request.form.get("password"))
@@ -119,7 +119,7 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form.get("username").lower()
+        username = request.form.get("username")
         password = request.form.get("password")
         user = mongo.db.users.find_one({"username": username})
 
@@ -144,20 +144,22 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
+    # Fetch orders for this client
     orders = list(mongo.db.orders.find({"clientno": session["user"]}))
-
-    # Fetch messages for each order
     orders_with_msgs = []
+
     for order in orders:
+        # Messages sent to this client OR sent by this client
         msgs = list(mongo.db.contact_messages.find({
-            "order_id": str(order["_id"]),
-            "to": session["user"]
+            "$or": [
+                {"order_id": str(order["_id"]), "to": session["user"]},
+                {"order_id": str(order["_id"]), "from": session["user"]}
+            ]
         }))
         order["messages"] = msgs
         orders_with_msgs.append(order)
 
     return render_template("dashboard.html", orders=orders_with_msgs)
-
 
 @app.route("/upload_order", methods=["POST"])
 @login_required
@@ -193,11 +195,8 @@ def delete_order(order_id):
 def admin_dashboard():
     orders = list(mongo.db.orders.find())
     users = list(mongo.db.users.find())
-    # prepare messages dict
-    messages = {}
-    for order in orders:
-        msgs = list(mongo.db.contact_messages.find({"order_id": str(order["_id"])}))
-        messages[str(order["_id"])] = msgs
+    # All messages
+    messages = list(mongo.db.contact_messages.find().sort("created", -1))
     return render_template("admin.html", orders=orders, users=users, messages=messages)
 
 @app.route("/admin/delete_order/<order_id>", methods=["POST"])
@@ -215,25 +214,56 @@ def admin_delete_user(user_id):
     if user:
         mongo.db.orders.delete_many({"clientno": user["username"]})
         mongo.db.users.delete_one({"_id": ObjectId(user_id)})
-        flash("User and orders deleted")
+        mongo.db.contact_messages.delete_many({"$or": [{"to": user["username"]}, {"from": user["username"]}]})
+        flash("User, orders and messages deleted")
     return redirect(url_for("admin_dashboard"))
 
+# ------------------- MESSAGES -------------------
 @app.route("/send_message", methods=["POST"])
 @login_required
 def send_message():
-    order_id = request.form.get("order_id")
+    order_id = request.form.get("order_id") or "general"
     text = request.form.get("text")
     to_user = request.form.get("to")
 
-    mongo.db.contact_messages.insert_one({
-        "from": session["user"],
-        "to": to_user,
-        "text": text,
-        "order_id": order_id,
-        "created": datetime.utcnow()
-    })
-    flash("Message sent!")
+    # Admin sending to all clients
+    if session.get("role") == "admin" and to_user == "all_clients":
+        clients = list(mongo.db.users.find({"role": "client"}))
+        for client in clients:
+            mongo.db.contact_messages.insert_one({
+                "from": session["user"],
+                "to": client["username"],
+                "text": text,
+                "order_id": order_id,
+                "created": datetime.utcnow()
+            })
+        flash("Message sent to all clients!")
+    else:
+        mongo.db.contact_messages.insert_one({
+            "from": session["user"],
+            "to": to_user,
+            "text": text,
+            "order_id": order_id,
+            "created": datetime.utcnow()
+        })
+        flash("Message sent!")
+
     return redirect(request.referrer or url_for("dashboard"))
+
+@app.route("/edit_message/<message_id>", methods=["POST"])
+@admin_required
+def edit_message(message_id):
+    new_text = request.form.get("text")
+    mongo.db.contact_messages.update_one({"_id": ObjectId(message_id)}, {"$set": {"text": new_text}})
+    flash("Message updated!")
+    return redirect(request.referrer or url_for("admin_dashboard"))
+
+@app.route("/delete_message/<message_id>", methods=["POST"])
+@admin_required
+def delete_message(message_id):
+    mongo.db.contact_messages.delete_one({"_id": ObjectId(message_id)})
+    flash("Message deleted!")
+    return redirect(request.referrer or url_for("admin_dashboard"))
 
 # ------------------- OTHER PAGES -------------------
 @app.route("/projects")
