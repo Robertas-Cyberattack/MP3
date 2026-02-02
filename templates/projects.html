@@ -1,22 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="hero center-align" style="margin-bottom: 40px;">
+<!-- Hero Section -->
+<div class="hero center-align">
   <h1>Our Projects</h1>
   <p>Take a look at some of our professional CAD, structural, and civil drafting projects.</p>
 </div>
 
+<!-- Projects Grid -->
 <div class="section">
-  <div class="row equal-height">
+  <div class="row flex-row">
     {% for project in projects %}
     <div class="col s12 m6 l4">
       <div class="card hoverable">
         <div class="card-image">
-          <img src="{{ url_for('static', filename='images/' ~ project.image) }}" class="responsive-img">
+          <img src="{{ url_for('static', filename='images/' ~ project.image) }}" alt="{{ project.title }}">
         </div>
-        <div class="card-content center-align">
-          <span class="card-title" style="font-size:1.1rem;">{{ project.title }}</span>
-          <p style="font-size:0.9rem;">{{ project.description }}</p>
+        <div class="card-content">
+          <span class="card-title">{{ project.title }}</span>
+          <p>{{ project.description }}</p>
         </div>
       </div>
     </div>
