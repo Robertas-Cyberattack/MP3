@@ -1,10 +1,10 @@
-/* GLOBAL HERO */
+/* ------------------- GLOBAL HERO ------------------- */
 .hero {
   padding: 60px 20px;
   text-align: center;
 }
 
-/* NAVBAR */
+/* ------------------- NAVBAR ------------------- */
 nav {
   height: 72px;
   line-height: 72px;
@@ -17,37 +17,71 @@ nav .brand-logo {
   white-space: nowrap;
 }
 
+/* Responsive navbar adjustments */
 @media (max-width: 992px) {
-  nav .brand-logo { font-size: 1.1rem; }
+  nav .brand-logo {
+    font-size: 1.1rem;
+  }
 }
 
 @media (max-width: 600px) {
-  nav { height: 64px; line-height: 64px; }
-  nav .brand-logo { font-size: 1rem; }
+  nav {
+    height: 64px;
+    line-height: 64px;
+  }
+  nav .brand-logo {
+    font-size: 1rem;
+  }
 }
 
-/* CARDS (projects/services) */
+/* ------------------- CARDS (projects/services) ------------------- */
+/* Flex container for rows */
+.row.flex-row,
 .row.equal-height {
   display: flex;
   flex-wrap: wrap;
+  margin-left: -8px;
+  margin-right: -8px;
 }
 
-.row.equal-height .col {
+/* Flex columns inside the row */
+.row.flex-row > .col,
+.row.equal-height > .col {
+  padding-left: 8px;
+  padding-right: 8px;
+  margin-bottom: 16px;
+  /* width is controlled by Materialize classes (s12 m6 l4) */
   display: flex;
   flex-direction: column;
 }
 
+/* Cards fill the column height */
+.row.flex-row .card,
 .row.equal-height .card {
-  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* ensures equal height for all cards in a row */
 }
 
-.row .col .card .card-content {
+/* Card content grows to fill remaining space */
+.row.flex-row .card .card-content,
+.row.equal-height .card .card-content {
   flex-grow: 1;
   text-align: center;
 }
 
+/* Card images */
 .card-image img {
   width: 100%;
   height: 200px;
   object-fit: cover;
+}
+
+/* Optional: make hover effect consistent */
+.card.hoverable {
+  transition: transform 0.2s;
+}
+
+.card.hoverable:hover {
+  transform: translateY(-5px);
 }

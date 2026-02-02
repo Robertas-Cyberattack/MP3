@@ -1,78 +1,28 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row">
-    <div class="col s12">
-        <ul class="tabs">
-            <li class="tab col s6"><a class="active" href="#orders">Užsakymai ir Žinutės</a></li>
-            <li class="tab col s6"><a href="#users">Vartotojai</a></li>
-        </ul>
-    </div>
 
-    <div id="orders" class="col s12">
-        {% for order in orders %}
-        <div class="card">
-            <div class="card-content">
-                <span class="card-title">Užsakymas: {{ order.clientno }}</span>
-                <p>Statusas: <b>{{ order.status }}</b></p>
-                
-                <h6>Susirašinėjimas:</h6>
-                <div class="grey lighten-4" style="padding: 10px; margin-bottom: 10px;">
-                    {% for msg in messages[order._id|string] %}
-                        <p><strong>{{ msg['from'] }}:</strong> {{ msg['text'] }}</p>
-                    {% else %}
-                        <p>Žinučių nėra.</p>
-                    {% endfor %}
-                </div>
+<h4>Admin Panel – Orders</h4>
 
-                <form method="POST" action="{{ url_for('send_message') }}">
-                    <input type="hidden" name="order_id" value="{{ order._id }}">
-                    <input type="hidden" name="to" value="{{ order.clientno }}">
-                    <div class="input-field">
-                        <input name="text" placeholder="Rašyti klientui..." required>
-                        <button class="btn blue">Siųsti</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
+{% for order in orders %}
+<div class="card">
+  <div class="card-content">
+    <p><strong>Client:</strong> {{ order.client }}</p>
 
-    <div id="users" class="col s12">
-        <table class="striped">
-            <thead>
-                <tr>
-                    <th>Vardas</th>
-                    <th>Rolė</th>
-                    <th>Būsena</th>
-                    <th>Veiksmai</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr>
-                    <td>{{ user.username }}</td>
-                    <td>{{ user.role }}</td>
-                    <td>{{ "Blokuotas" if user.lock else "Aktyvus" }}</td>
-                    <td>
-                        {% if user.username != session.user %}
-                        <form action="{{ url_for('toggle_block', user_id=user._id) }}" method="POST" style="display:inline;">
-                            <button class="btn-small orange">{{ "Atblokuoti" if user.lock else "Blokuoti" }}</button>
-                        </form>
-                        <form action="{{ url_for('admin_delete_user', user_id=user._id) }}" method="POST" style="display:inline;">
-                            <button class="btn-small red" onclick="return confirm('Tikrai trinti?')">Trinti</button>
-                        </form>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    <form method="POST" action="{{ url_for('update_order', order_id=order._id) }}">
+      <div class="input-field">
+        <input type="text" name="status" value="{{ order.status }}">
+        <label class="active">Status</label>
+      </div>
+
+      <div class="input-field">
+        <input type="number" name="progress" min="0" max="100" value="{{ order.progress }}">
+        <label class="active">Progress (%)</label>
+      </div>
+
+      <button class="btn green">Update</button>
+    </form>
+  </div>
 </div>
+{% endfor %}
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        M.Tabs.init(document.querySelectorAll('.tabs'));
-    });
-</script>
 {% endblock %}
