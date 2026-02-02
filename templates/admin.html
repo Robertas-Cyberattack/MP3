@@ -4,7 +4,7 @@
 <div class="row">
   <div class="col s12">
     <ul class="tabs">
-      <li class="tab col s6"><a class="active" href="#orders">Orders</a></li>
+      <li class="tab col s6"><a class="active" href="#orders">Orders & Messages</a></li>
       <li class="tab col s6"><a href="#users">Users</a></li>
     </ul>
   </div>
@@ -14,32 +14,41 @@
     {% for order in orders %}
     <div class="card">
       <div class="card-content">
-        <p><strong>Client:</strong> {{ order.clientno }}</p>
-        <p>Status: {{ order.status }} | {{ order.progress }}%</p>
+        <p><strong>Client:</strong> {{ order.clientno }} | <strong>Status:</strong> {{ order.status }} | {{ order.progress }}%</p>
 
-        <form method="POST"
-              action="{{ url_for('admin_delete_order', order_id=order._id) }}"
-              onsubmit="return confirm('Delete order and messages?');">
+        <!-- DELETE ORDER -->
+        <form method="POST" action="{{ url_for('admin_delete_order', order_id=order._id) }}" 
+              onsubmit="return confirm('Delete order and messages?');" style="margin-bottom: 8px;">
           <button class="btn red">Delete Order</button>
         </form>
 
         <hr>
-        <h6>Messages</h6>
-        {% for msg in messages[order._id|string] %}
-          <p><strong>{{ msg['from'] }}:</strong> {{ msg['text'] }}</p>
-        {% else %}
-          <p class="grey-text">No messages yet.</p>
-        {% endfor %}
 
-        <form method="POST" action="{{ url_for('send_message') }}">
+        <!-- CHAT -->
+        <div class="chat-box" style="max-height: 300px; overflow-y: auto; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+          {% if messages[order._id|string] %}
+            {% for msg in messages[order._id|string] %}
+              <div style="margin-bottom: 8px; display: flex; {% if msg['from']=='admin' %}justify-content: flex-end;{% else %}justify-content: flex-start;{% endif %}">
+                <div style="background: {% if msg['from']=='admin' %}#1976d2; color: white;{% else %}#e0e0e0;{% endif %}; padding: 8px 12px; border-radius: 12px; max-width: 70%;">
+                  <small>{{ msg['from'] }}</small><br>
+                  {{ msg['text'] }}
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="grey-text">No messages yet.</p>
+          {% endif %}
+        </div>
+
+        <!-- SEND MESSAGE -->
+        <form method="POST" action="{{ url_for('send_message') }}" style="margin-top: 8px;">
           <input type="hidden" name="order_id" value="{{ order._id }}">
           <input type="hidden" name="to" value="{{ order.clientno }}">
           <div class="input-field">
-            <input name="text" placeholder="Message about this order" required>
+            <input name="text" placeholder="Type your message here" required>
           </div>
           <button class="btn blue">Send</button>
         </form>
-
       </div>
     </div>
     {% endfor %}

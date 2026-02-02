@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h4>My Orders</h4>
+<h4>My Orders & Messages</h4>
 
 <!-- UPLOAD FORM -->
 <div class="card">
@@ -25,23 +25,20 @@
 {% for order in orders %}
 <div class="card">
   <div class="card-content">
-    <p><strong>Status:</strong> {{ order.status }}</p>
-    <p><strong>Progress:</strong> {{ order.progress }}%</p>
-
+    <p><strong>Status:</strong> {{ order.status }} | <strong>Progress:</strong> {{ order.progress }}%</p>
     <div class="progress">
       <div class="determinate" style="width: {{ order.progress }}%"></div>
     </div>
 
     <hr>
-
     <p><strong>Files:</strong></p>
     {% for f in order.file %}
-    <p>📄 {{ f }}</p>
+      <p>📄 {{ f }}</p>
     {% endfor %}
 
     <!-- DELETE BUTTON -->
-    <form method="POST" action="{{ url_for('delete_order', order_id=order._id) }}"
-      onsubmit="return confirm('Delete this order permanently?');">
+    <form method="POST" action="{{ url_for('delete_order', order_id=order._id) }}" 
+          onsubmit="return confirm('Delete this order permanently?');">
       <button class="btn red darken-2">
         <i class="material-icons left">delete</i>
         Delete Order
@@ -50,9 +47,25 @@
 
     <hr>
 
-    <!-- MESSAGE TO ADMIN -->
-    <h6>Send Message to Admin about this order</h6>
-    <form method="POST" action="{{ url_for('send_message') }}">
+    <!-- CHAT -->
+    <h6>Messages with Admin</h6>
+    <div class="chat-box" style="max-height: 300px; overflow-y: auto; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+      {% if order.messages %}
+        {% for msg in order.messages %}
+          <div style="margin-bottom: 8px; display: flex; {% if msg['from']==session.user %}justify-content: flex-end;{% else %}justify-content: flex-start;{% endif %}">
+            <div style="background: {% if msg['from']==session.user %}#1976d2; color: white;{% else %}#e0e0e0;{% endif %}; padding: 8px 12px; border-radius: 12px; max-width: 70%;">
+              <small>{{ msg['from'] }}</small><br>
+              {{ msg['text'] }}
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="grey-text">No messages yet.</p>
+      {% endif %}
+    </div>
+
+    <!-- SEND MESSAGE -->
+    <form method="POST" action="{{ url_for('send_message') }}" style="margin-top: 8px;">
       <input type="hidden" name="order_id" value="{{ order._id }}">
       <input type="hidden" name="to" value="admin">
       <div class="input-field">
@@ -60,18 +73,6 @@
       </div>
       <button class="btn blue">Send</button>
     </form>
-
-    <!-- DISPLAY MESSAGES FROM ADMIN -->
-    <h6>Messages from Admin</h6>
-    {% if order.messages %}
-    {% for msg in order.messages %}
-    <p><strong>{{ msg['from'] }}:</strong> {{ msg['text'] }}</p>
-    {% endfor %}
-    {% else %}
-    <p class="grey-text">No messages yet.</p>
-    {% endif %}
-
-
   </div>
 </div>
 {% else %}
