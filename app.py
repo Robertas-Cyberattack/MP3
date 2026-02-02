@@ -50,7 +50,7 @@ def admin_required(f):
     def wrap(*args, **kwargs):
         if session.get("role") != "admin":
             flash("Admin access required")
-            return redirect(url_for("dashboard"))
+            return redirect(url_for("home"))
         return f(*args, **kwargs)
     return wrap
 
@@ -145,16 +145,19 @@ def logout():
 @login_required
 def dashboard():
     orders = list(mongo.db.orders.find({"clientno": session["user"]}))
+
+    # Fetch messages for each order
+    orders_with_msgs = []
     for order in orders:
         msgs = list(mongo.db.contact_messages.find({
             "order_id": str(order["_id"]),
-            "$or": [
-                {"from": session["user"]},
-                {"to": session["user"]}
-            ]
-        }).sort("created", 1))
+            "to": session["user"]
+        }))
         order["messages"] = msgs
-    return render_template("dashboard.html", orders=orders)
+        orders_with_msgs.append(order)
+
+    return render_template("dashboard.html", orders=orders_with_msgs)
+
 
 @app.route("/upload_order", methods=["POST"])
 @login_required
@@ -181,27 +184,8 @@ def upload_order():
 @login_required
 def delete_order(order_id):
     mongo.db.orders.delete_one({"_id": ObjectId(order_id), "clientno": session["user"]})
-    mongo.db.contact_messages.delete_many({"order_id": order_id})
-    flash("Order and messages deleted")
+    flash("Order deleted")
     return redirect(url_for("dashboard"))
-
-# ------------------- SEND MESSAGE -------------------
-@app.route("/send_message", methods=["POST"])
-@login_required
-def send_message():
-    order_id = request.form.get("order_id")
-    text = request.form.get("text")
-    to_user = request.form.get("to")
-
-    mongo.db.contact_messages.insert_one({
-        "from": session["user"],
-        "to": to_user,
-        "text": text,
-        "order_id": order_id,
-        "created": datetime.utcnow()
-    })
-    flash("Message sent!")
-    return redirect(request.referrer or url_for("dashboard"))
 
 # ------------------- ADMIN DASHBOARD -------------------
 @app.route("/admin")
@@ -209,10 +193,12 @@ def send_message():
 def admin_dashboard():
     orders = list(mongo.db.orders.find())
     users = list(mongo.db.users.find())
+    # prepare messages dict
+    messages = {}
     for order in orders:
-        msgs = list(mongo.db.contact_messages.find({"order_id": str(order["_id"])}).sort("created", 1))
-        order["messages"] = msgs
-    return render_template("admin.html", orders=orders, users=users)
+        msgs = list(mongo.db.contact_messages.find({"order_id": str(order["_id"])}))
+        messages[str(order["_id"])] = msgs
+    return render_template("admin.html", orders=orders, users=users, messages=messages)
 
 @app.route("/admin/delete_order/<order_id>", methods=["POST"])
 @admin_required
@@ -231,6 +217,23 @@ def admin_delete_user(user_id):
         mongo.db.users.delete_one({"_id": ObjectId(user_id)})
         flash("User and orders deleted")
     return redirect(url_for("admin_dashboard"))
+
+@app.route("/send_message", methods=["POST"])
+@login_required
+def send_message():
+    order_id = request.form.get("order_id")
+    text = request.form.get("text")
+    to_user = request.form.get("to")
+
+    mongo.db.contact_messages.insert_one({
+        "from": session["user"],
+        "to": to_user,
+        "text": text,
+        "order_id": order_id,
+        "created": datetime.utcnow()
+    })
+    flash("Message sent!")
+    return redirect(request.referrer or url_for("dashboard"))
 
 # ------------------- OTHER PAGES -------------------
 @app.route("/projects")

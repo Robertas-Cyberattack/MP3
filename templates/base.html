@@ -8,10 +8,290 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <style>
+    /* HERO */
+    .hero { padding: 60px 20px; text-align: center; }
+
+    /* NAVBAR */
+    nav { height: 72px; line-height: 72px; z-index: 999; }
+    nav .brand-logo { font-size: 1.3rem; white-space: nowrap; }
+
+    /* Force burger visible on medium and below */
+    @media (max-width: 992px) {
+      .sidenav-trigger { display: block !important; }
+      nav ul.right { display: none !important; }
+    }
+
+    @media (max-width: 600px) {
+      nav { height: 64px; line-height: 64px; }
+      nav .brand-logo { font-size: 1.1rem; }
+    }
+
+    /* CARDS FIX */
+    .row.flex-row { display: flex; flex-wrap: wrap; margin-left: -8px; margin-right: -8px; }
+    .row.flex-row > .col { padding-left: 8px; padding-right: 8px; margin-bottom: 16px; display: flex; }
+    .row.flex-row .card { flex: 1 1 100%; display: flex; flex-direction: column; }
+    .row.flex-row .card .card-content { flex-grow: 1; text-align: center; }
+    .card-image img { width: 100%; height: 200px; object-fit: cover; }
+  </style>
 </head>
 <body class="site">
 
 <!-- NAVBAR -->
 <nav class="blue darken-2">
   <div class="nav-wrapper container">
-    <a href="{{ url_for('home') }}" class="brand-logo">
+    <a href="{{ url_for('home') }}" class="brand-logo">PDE</a>
+
+    <!-- Hamburger always visible on tablet/mobile -->
+    <a href="#" data-target="mobile-menu" class="sidenav-trigger">
+      <i class="material-icons">menu</i>
+    </a>
+
+    <ul class="right hide-on-med-and-down">
+      <li><a href="{{ url_for('home') }}">Home</a></li>
+      <li><a href="{{ url_for('projects') }}">Projects</a></li>
+      <li><a href="{{ url_for('services') }}">Services</a></li>
+      <li><a href="{{ url_for('about') }}">About</a></li>
+      <li><a href="{{ url_for('contact') }}">Contact</a></li>
+      {% if session.get("user") %}
+        {% if session.get("role") == "admin" %}
+          <li><a href="{{ url_for('admin_dashboard') }}">Admin</a></li>
+        {% else %}
+          <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+        {% endif %}
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+      {% else %}
+        <li><a href="{{ url_for('login') }}">Login</a></li>
+        <li><a href="{{ url_for('register') }}">Register</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<ul class="sidenav" id="mobile-menu">
+  <li><a href="{{ url_for('home') }}">Home</a></li>
+  <li><a href="{{ url_for('projects') }}">Projects</a></li>
+  <li><a href="{{ url_for('services') }}">Services</a></li>
+  <li><a href="{{ url_for('about') }}">About</a></li>
+  <li><a href="{{ url_for('contact') }}">Contact</a></li>
+  {% if session.get("user") %}
+    {% if session.get("role") == "admin" %}
+      <li><a href="{{ url_for('admin_dashboard') }}">Admin</a></li>
+    {% else %}
+      <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+    {% endif %}
+    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+  {% else %}
+    <li><a href="{{ url_for('login') }}">Login</a></li>
+    <li><a href="{{ url_for('register') }}">Register</a></li>
+  {% endif %}
+</ul>
+
+<main class="container site-content" style="margin-top: 40px;">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="page-footer blue darken-2">
+  <div class="container center-align">© 2026 Precision Drafting & Engineering</div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    M.Sidenav.init(document.querySelectorAll('.sidenav'));
+  });
+</script>
+</body>
+</html>
+dashboard.html:
+{% extends "base.html" %}
+{% block content %}
+
+<h4>My Orders</h4>
+
+<!-- UPLOAD FORM -->
+<div class="card">
+  <div class="card-content">
+    <form method="POST" action="{{ url_for('upload_order') }}" enctype="multipart/form-data">
+      <div class="file-field input-field">
+        <div class="btn blue">
+          <span>Upload Files</span>
+          <input type="file" name="file" multiple required>
+        </div>
+        <div class="file-path-wrapper">
+          <input class="file-path validate" type="text">
+        </div>
+      </div>
+      <button class="btn blue darken-2">Submit Order</button>
+    </form>
+  </div>
+</div>
+
+<!-- ORDERS LIST -->
+{% for order in orders %}
+<div class="card">
+  <div class="card-content">
+    <p><strong>Status:</strong> {{ order.status }}</p>
+    <p><strong>Progress:</strong> {{ order.progress }}%</p>
+
+    <div class="progress">
+      <div class="determinate" style="width: {{ order.progress }}%"></div>
+    </div>
+
+    <hr>
+
+    <p><strong>Files:</strong></p>
+    {% for f in order.file %}
+    <p>📄 {{ f }}</p>
+    {% endfor %}
+
+    <!-- DELETE BUTTON -->
+    <form method="POST" action="{{ url_for('delete_order', order_id=order._id) }}"
+      onsubmit="return confirm('Delete this order permanently?');">
+      <button class="btn red darken-2">
+        <i class="material-icons left">delete</i>
+        Delete Order
+      </button>
+    </form>
+
+    <hr>
+
+    <!-- MESSAGE TO ADMIN -->
+    <h6>Send Message to Admin about this order</h6>
+    <form method="POST" action="{{ url_for('send_message') }}">
+      <input type="hidden" name="order_id" value="{{ order._id }}">
+      <input type="hidden" name="to" value="admin">
+      <div class="input-field">
+        <input name="text" placeholder="Type your message here" required>
+      </div>
+      <button class="btn blue">Send</button>
+    </form>
+
+    <!-- DISPLAY MESSAGES FROM ADMIN -->
+    <h6>Messages from Admin</h6>
+    {% if order.messages %}
+    {% for msg in order.messages %}
+    <p><strong>{{ msg['from'] }}:</strong> {{ msg['text'] }}</p>
+    {% endfor %}
+    {% else %}
+    <p class="grey-text">No messages yet.</p>
+    {% endif %}
+
+
+  </div>
+</div>
+{% else %}
+<p>No orders yet.</p>
+{% endfor %}
+
+{% endblock %} 
+base.html:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Precision Drafting & Engineering</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <style>
+    /* HERO */
+    .hero { padding: 60px 20px; text-align: center; }
+
+    /* NAVBAR */
+    nav { height: 72px; line-height: 72px; z-index: 999; }
+    nav .brand-logo { font-size: 1.3rem; white-space: nowrap; }
+
+    /* Force burger visible on medium and below */
+    @media (max-width: 992px) {
+      .sidenav-trigger { display: block !important; }
+      nav ul.right { display: none !important; }
+    }
+
+    @media (max-width: 600px) {
+      nav { height: 64px; line-height: 64px; }
+      nav .brand-logo { font-size: 1.1rem; }
+    }
+
+    /* CARDS FIX */
+    .row.flex-row { display: flex; flex-wrap: wrap; margin-left: -8px; margin-right: -8px; }
+    .row.flex-row > .col { padding-left: 8px; padding-right: 8px; margin-bottom: 16px; display: flex; }
+    .row.flex-row .card { flex: 1 1 100%; display: flex; flex-direction: column; }
+    .row.flex-row .card .card-content { flex-grow: 1; text-align: center; }
+    .card-image img { width: 100%; height: 200px; object-fit: cover; }
+  </style>
+</head>
+<body class="site">
+
+<!-- NAVBAR -->
+<nav class="blue darken-2">
+  <div class="nav-wrapper container">
+    <a href="{{ url_for('home') }}" class="brand-logo">PDE</a>
+
+    <!-- Hamburger always visible on tablet/mobile -->
+    <a href="#" data-target="mobile-menu" class="sidenav-trigger">
+      <i class="material-icons">menu</i>
+    </a>
+
+    <ul class="right hide-on-med-and-down">
+      <li><a href="{{ url_for('home') }}">Home</a></li>
+      <li><a href="{{ url_for('projects') }}">Projects</a></li>
+      <li><a href="{{ url_for('services') }}">Services</a></li>
+      <li><a href="{{ url_for('about') }}">About</a></li>
+      <li><a href="{{ url_for('contact') }}">Contact</a></li>
+      {% if session.get("user") %}
+        {% if session.get("role") == "admin" %}
+          <li><a href="{{ url_for('admin_dashboard') }}">Admin</a></li>
+        {% else %}
+          <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+        {% endif %}
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+      {% else %}
+        <li><a href="{{ url_for('login') }}">Login</a></li>
+        <li><a href="{{ url_for('register') }}">Register</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<ul class="sidenav" id="mobile-menu">
+  <li><a href="{{ url_for('home') }}">Home</a></li>
+  <li><a href="{{ url_for('projects') }}">Projects</a></li>
+  <li><a href="{{ url_for('services') }}">Services</a></li>
+  <li><a href="{{ url_for('about') }}">About</a></li>
+  <li><a href="{{ url_for('contact') }}">Contact</a></li>
+  {% if session.get("user") %}
+    {% if session.get("role") == "admin" %}
+      <li><a href="{{ url_for('admin_dashboard') }}">Admin</a></li>
+    {% else %}
+      <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+    {% endif %}
+    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+  {% else %}
+    <li><a href="{{ url_for('login') }}">Login</a></li>
+    <li><a href="{{ url_for('register') }}">Register</a></li>
+  {% endif %}
+</ul>
+
+<main class="container site-content" style="margin-top: 40px;">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="page-footer blue darken-2">
+  <div class="container center-align">© 2026 Precision Drafting & Engineering</div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    M.Sidenav.init(document.querySelectorAll('.sidenav'));
+  });
+</script>
+</body>
+</html>

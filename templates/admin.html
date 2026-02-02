@@ -1,96 +1,73 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h4>Admin Dashboard</h4>
+<div class="row">
+  <div class="col s12">
+    <ul class="tabs">
+      <li class="tab col s6"><a class="active" href="#orders">Orders</a></li>
+      <li class="tab col s6"><a href="#users">Users</a></li>
+    </ul>
+  </div>
 
-<h5>All Orders</h5>
-{% for order in orders %}
-<div class="card" style="margin-top: 20px;">
-  <div class="card-content">
-    <p><strong>Client:</strong> {{ order.clientno }} | <strong>Status:</strong> {{ order.status }} | <strong>Progress:</strong> {{ order.progress }}%</p>
-    <div class="progress">
-      <div class="determinate" style="width: {{ order.progress }}%"></div>
-    </div>
+  <div id="orders" class="col s12">
+    <h4>Orders & Messages</h4>
+    {% for order in orders %}
+    <div class="card">
+      <div class="card-content">
+        <p><strong>Client:</strong> {{ order.clientno }}</p>
+        <p>Status: {{ order.status }} | {{ order.progress }}%</p>
 
-    <hr>
-    <p><strong>Files:</strong></p>
-    {% for f in order.file %}
-      <p>📄 {{ f }}</p>
-    {% endfor %}
+        <form method="POST"
+              action="{{ url_for('admin_delete_order', order_id=order._id) }}"
+              onsubmit="return confirm('Delete order and messages?');">
+          <button class="btn red">Delete Order</button>
+        </form>
 
-    <!-- DELETE BUTTON -->
-    <form method="POST" action="{{ url_for('admin_delete_order', order_id=order._id) }}" 
-          onsubmit="return confirm('Delete this order permanently?');">
-      <button class="btn red darken-2">
-        <i class="material-icons left">delete</i>
-        Delete Order
-      </button>
-    </form>
-
-    <hr>
-
-    <!-- CHAT -->
-    <h6>Messages</h6>
-    <div class="chat-box" style="max-height: 300px; overflow-y: auto; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-      {% if order.messages %}
-        {% for msg in order.messages %}
-          <div style="margin-bottom: 8px; display: flex; {% if msg.from == 'admin' %}justify-content: flex-end;{% else %}justify-content: flex-start;{% endif %}">
-            <div style="background: {% if msg.from == 'admin' %}#1976d2; color: white;{% else %}#e0e0e0;{% endif %}; padding: 8px 12px; border-radius: 12px; max-width: 70%;">
-              <small>{{ msg.from }}</small><br>
-              {{ msg.text }}
-            </div>
-          </div>
+        <hr>
+        <h6>Messages</h6>
+        {% for msg in messages[order._id|string] %}
+          <p><strong>{{ msg['from'] }}:</strong> {{ msg['text'] }}</p>
+        {% else %}
+          <p class="grey-text">No messages yet.</p>
         {% endfor %}
-      {% else %}
-        <p class="grey-text">No messages yet.</p>
-      {% endif %}
-    </div>
 
-    <!-- SEND MESSAGE -->
-    <form method="POST" action="{{ url_for('send_message') }}" style="margin-top: 8px;">
-      <input type="hidden" name="order_id" value="{{ order._id }}">
-      <input type="hidden" name="to" value="{{ order.clientno }}">
-      <div class="input-field">
-        <input name="text" placeholder="Type your message here" required>
+        <form method="POST" action="{{ url_for('send_message') }}">
+          <input type="hidden" name="order_id" value="{{ order._id }}">
+          <input type="hidden" name="to" value="{{ order.clientno }}">
+          <div class="input-field">
+            <input name="text" placeholder="Message about this order" required>
+          </div>
+          <button class="btn blue">Send</button>
+        </form>
+
       </div>
-      <button class="btn blue">Send</button>
-    </form>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div id="users" class="col s12">
+    <h4>Users</h4>
+    {% for user in users %}
+    <div class="card">
+      <div class="card-content">
+        <p><strong>{{ user.username }}</strong> ({{ user.role }})</p>
+        {% if user.username != session.user %}
+        <form method="POST"
+              action="{{ url_for('admin_delete_user', user_id=user._id) }}"
+              onsubmit="return confirm('Delete user and all orders?');">
+          <button class="btn red">Delete User</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
   </div>
 </div>
-{% else %}
-<p>No orders yet.</p>
-{% endfor %}
 
-<hr>
-<h5>All Users</h5>
-<table class="highlight">
-  <thead>
-    <tr>
-      <th>Username</th>
-      <th>Email</th>
-      <th>Phone</th>
-      <th>Role</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for user in users %}
-    <tr>
-      <td>{{ user.username }}</td>
-      <td>{{ user.email }}</td>
-      <td>{{ user.phone }}</td>
-      <td>{{ user.role }}</td>
-      <td>
-        <form method="POST" action="{{ url_for('admin_delete_user', user_id=user._id) }}" 
-              onsubmit="return confirm('Delete this user permanently?');">
-          <button class="btn red btn-small">
-            <i class="material-icons">delete</i>
-          </button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  M.Tabs.init(document.querySelectorAll('.tabs'));
+});
+</script>
 
 {% endblock %}
