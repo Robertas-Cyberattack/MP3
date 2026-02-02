@@ -1,10 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+
 <h4>My Orders</h4>
 
 <!-- UPLOAD FORM -->
 <div class="card">
   <div class="card-content">
     <form method="POST" action="{{ url_for('upload_order') }}" enctype="multipart/form-data">
-@@ -21,11 +20,9 @@ <h4>My Orders</h4>
+      <div class="file-field input-field">
+        <div class="btn blue">
+          <span>Upload Files</span>
+          <input type="file" name="file" multiple required>
+        </div>
+        <div class="file-path-wrapper">
+          <input class="file-path validate" type="text">
+        </div>
+      </div>
+      <button class="btn blue darken-2">Submit Order</button>
+    </form>
   </div>
 </div>
 
@@ -12,33 +25,57 @@
 {% for order in orders %}
 <div class="card">
   <div class="card-content">
-
     <p><strong>Status:</strong> {{ order.status }}</p>
     <p><strong>Progress:</strong> {{ order.progress }}%</p>
 
-@@ -34,15 +31,11 @@ <h4>My Orders</h4>
+    <div class="progress">
+      <div class="determinate" style="width: {{ order.progress }}%"></div>
     </div>
 
     <hr>
 
     <p><strong>Files:</strong></p>
-    {% for file in order.files %}
-      <p>📄 {{ file }}</p>
     {% for f in order.file %}
-      <p>📄 {{ f }}</p>
+    <p>📄 {{ f }}</p>
     {% endfor %}
 
-    <br>
-
     <!-- DELETE BUTTON -->
-    <form method="POST"
-          action="{{ url_for('delete_order', order_id=order._id) }}"
-          onsubmit="return confirm('Delete this order permanently?');">
-@@ -51,7 +44,6 @@ <h4>My Orders</h4>
+    <form method="POST" action="{{ url_for('delete_order', order_id=order._id) }}"
+      onsubmit="return confirm('Delete this order permanently?');">
+      <button class="btn red darken-2">
+        <i class="material-icons left">delete</i>
         Delete Order
       </button>
     </form>
 
+    <hr>
+
+    <!-- MESSAGE TO ADMIN -->
+    <h6>Send Message to Admin about this order</h6>
+    <form method="POST" action="{{ url_for('send_message') }}">
+      <input type="hidden" name="order_id" value="{{ order._id }}">
+      <input type="hidden" name="to" value="admin">
+      <div class="input-field">
+        <input name="text" placeholder="Type your message here" required>
+      </div>
+      <button class="btn blue">Send</button>
+    </form>
+
+    <!-- DISPLAY MESSAGES FROM ADMIN -->
+    <h6>Messages from Admin</h6>
+    {% if order.messages %}
+    {% for msg in order.messages %}
+    <p><strong>{{ msg['from'] }}:</strong> {{ msg['text'] }}</p>
+    {% endfor %}
+    {% else %}
+    <p class="grey-text">No messages yet.</p>
+    {% endif %}
+
+
   </div>
 </div>
 {% else %}
+<p>No orders yet.</p>
+{% endfor %}
+
+{% endblock %} 
