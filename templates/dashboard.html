@@ -3,6 +3,7 @@
 
 <h4>My Orders</h4>
 
+<!-- UPLOAD FORM -->
 <div class="card">
   <div class="card-content">
     <form method="POST" action="{{ url_for('upload_order') }}" enctype="multipart/form-data">
@@ -20,6 +21,7 @@
   </div>
 </div>
 
+<!-- ORDERS LIST -->
 {% for order in orders %}
 <div class="card">
   <div class="card-content">
@@ -31,11 +33,13 @@
     </div>
 
     <hr>
+
     <p><strong>Files:</strong></p>
     {% for f in order.file %}
       <p>📄 {{ f }}</p>
     {% endfor %}
 
+    <!-- DELETE BUTTON -->
     <form method="POST"
           action="{{ url_for('delete_order', order_id=order._id) }}"
           onsubmit="return confirm('Delete this order permanently?');">
@@ -44,6 +48,29 @@
         Delete Order
       </button>
     </form>
+
+    <hr>
+
+    <!-- MESSAGE TO ADMIN -->
+    <h6>Send Message to Admin about this order</h6>
+    <form method="POST" action="{{ url_for('send_message') }}">
+      <input type="hidden" name="order_id" value="{{ order._id }}">
+      <input type="hidden" name="to" value="admin">
+      <div class="input-field">
+        <input name="text" placeholder="Type your message here" required>
+      </div>
+      <button class="btn blue">Send</button>
+    </form>
+
+    <!-- DISPLAY MESSAGES FROM ADMIN -->
+    <h6>Messages from Admin</h6>
+    {% set msgs = mongo.db.contact_messages.find({"order_id": str(order._id), "to": session.user}) %}
+    {% for msg in msgs %}
+      <p><strong>{{ msg['from'] }}:</strong> {{ msg['text'] }}</p>
+    {% else %}
+      <p class="grey-text">No messages yet.</p>
+    {% endfor %}
+
   </div>
 </div>
 {% else %}
