@@ -1,49 +1,70 @@
-{% extends "base.html" %}
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Precision Drafting & Engineering</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<h4>Admin Panel – Orders</h4>
+  <!-- Materialize CSS & Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-{% for order in orders %}
-<div class="card">
-  <div class="card-content">
-    <p><strong>Client:</strong> {{ order.clientno }}</p> <!-- clientno, ne client -->
+  <style>
+    /* HERO */
+    .hero { padding: 60px 20px; text-align: center; }
 
-    <form method="POST" action="{{ url_for('update_order', order_id=order._id) }}">
-      <div class="input-field">
-        <input type="text" name="status" value="{{ order.status }}">
-        <label class="active">Status</label>
-      </div>
+    /* NAVBAR */
+    nav { height: 72px; line-height: 72px; z-index: 999; }
+    nav .brand-logo { font-size: 1.3rem; white-space: nowrap; }
 
-      <div class="input-field">
-        <input type="number" name="progress" min="0" max="100" value="{{ order.progress }}">
-        <label class="active">Progress (%)</label>
-      </div>
+    /* Force burger visible on medium and below */
+    @media (max-width: 992px) {
+      .sidenav-trigger { display: block !important; }
+      nav ul.right { display: none !important; }
+    }
 
-      <button class="btn green">Update</button>
-    </form>
+    @media (max-width: 600px) {
+      nav { height: 64px; line-height: 64px; }
+      nav .brand-logo { font-size: 1.1rem; }
+    }
 
-    <form method="POST" action="{{ url_for('admin_delete_order', order_id=order._id) }}" style="margin-top: 10px;">
-      <button class="btn red">Delete Order</button>
-    </form>
-  </div>
-</div>
-{% endfor %}
+    /* CARDS FIX */
+    .row.flex-row { display: flex; flex-wrap: wrap; margin-left: -8px; margin-right: -8px; }
+    .row.flex-row > .col { padding-left: 8px; padding-right: 8px; margin-bottom: 16px; display: flex; }
+    .row.flex-row .card { flex: 1 1 100%; display: flex; flex-direction: column; }
+    .row.flex-row .card .card-content { flex-grow: 1; text-align: center; }
+    .card-image img { width: 100%; height: 200px; object-fit: cover; }
+  </style>
+</head>
+<body class="site">
 
-<h4>Users</h4>
-{% for user in users %}
-<div class="card">
-  <div class="card-content">
-    <p><strong>Username:</strong> {{ user.username }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-    <p><strong>Role:</strong> {{ user.role }}</p>
+<!-- NAVBAR -->
+<nav class="blue darken-2">
+  <div class="nav-wrapper container">
+    <a href="{{ url_for('home') }}" class="brand-logo">PDE</a>
 
-    {% if user.role != "admin" %}
-    <form method="POST" action="{{ url_for('admin_delete_user', user_id=user._id) }}">
-      <button class="btn red">Delete User</button>
-    </form>
-    {% endif %}
-  </div>
-</div>
-{% endfor %}
+    <!-- Hamburger always visible on tablet/mobile -->
+    <a href="#" data-target="mobile-menu" class="sidenav-trigger">
+      <i class="material-icons">menu</i>
+    </a>
 
-{% endblock %}
+    <ul class="right hide-on-med-and-down">
+      <li><a href="{{ url_for('home') }}">Home</a></li>
+      <li><a href="{{ url_for('projects') }}">Projects</a></li>
+      <li><a href="{{ url_for('services') }}">Services</a></li>
+      <li><a href="{{ url_for('about') }}">About</a></li>
+      <li><a href="{{ url_for('contact') }}">Contact</a></li>
+
+      {% if session.get("user") %}
+        {% if session.get("role") == "admin" %}
+          <li><a href="{{ url_for('admin_dashboard') }}">Admin</a></li>
+        {% else %}
+          <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+        {% endif %}
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+      {% else %}
+        <li><a href="{{ url_for('login') }}">Login</a></li>
+        <li><a href="{{ url_for('register') }}">Register</a></li>
+      {% endif %}
+    </ul>
