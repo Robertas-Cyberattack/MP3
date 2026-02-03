@@ -144,10 +144,12 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
+    # Fetch orders for this client
     orders = list(mongo.db.orders.find({"clientno": session["user"]}))
     orders_with_msgs = []
 
     for order in orders:
+        # Messages sent to this client OR sent by this client
         msgs = list(mongo.db.contact_messages.find({
             "$or": [
                 {"order_id": str(order["_id"]), "to": session["user"]},
@@ -193,25 +195,9 @@ def delete_order(order_id):
 def admin_dashboard():
     orders = list(mongo.db.orders.find())
     users = list(mongo.db.users.find())
+    # All messages
     messages = list(mongo.db.contact_messages.find().sort("created", -1))
     return render_template("admin.html", orders=orders, users=users, messages=messages)
-
-# ------------------- ADMIN UPDATE ORDER -------------------
-@app.route("/admin/update_order/<order_id>", methods=["POST"])
-@admin_required
-def update_order(order_id):
-    new_status = request.form.get("status")
-    try:
-        new_progress = int(request.form.get("progress"))
-    except (ValueError, TypeError):
-        new_progress = 0
-
-    mongo.db.orders.update_one(
-        {"_id": ObjectId(order_id)},
-        {"$set": {"status": new_status, "progress": new_progress}}
-    )
-    flash("Order updated successfully!")
-    return redirect(url_for("admin_dashboard"))
 
 @app.route("/admin/delete_order/<order_id>", methods=["POST"])
 @admin_required
@@ -240,6 +226,7 @@ def send_message():
     text = request.form.get("text")
     to_user = request.form.get("to")
 
+    # Admin sending to all clients
     if session.get("role") == "admin" and to_user == "all_clients":
         clients = list(mongo.db.users.find({"role": "client"}))
         for client in clients:
