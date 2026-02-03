@@ -5,12 +5,15 @@
   <title>Precision Drafting & Engineering</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Materialize CSS & Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
   <style>
+    /* PAGRINDINIS IŠDĖSTYMAS */
+    body { display: flex; min-height: 100vh; flex-direction: column; }
+    main { flex: 1 0 auto; }
+
     /* HERO */
     .hero { padding: 60px 20px; text-align: center; }
 
@@ -39,32 +42,90 @@
 </head>
 <body class="site">
 
-<!-- NAVBAR -->
-<nav class="blue darken-2">
-  <div class="nav-wrapper container">
-    <a href="{{ url_for('home') }}" class="brand-logo">PDE</a>
+  <nav class="blue darken-2">
+    <div class="nav-wrapper container">
+      <a href="{{ url_for('home') }}" class="brand-logo">PDE</a>
 
-    <!-- Hamburger always visible on tablet/mobile -->
-    <a href="#" data-target="mobile-menu" class="sidenav-trigger">
-      <i class="material-icons">menu</i>
-    </a>
+      <a href="#" data-target="mobile-menu" class="sidenav-trigger">
+        <i class="material-icons">menu</i>
+      </a>
 
-    <ul class="right hide-on-med-and-down">
-      <li><a href="{{ url_for('home') }}">Home</a></li>
-      <li><a href="{{ url_for('projects') }}">Projects</a></li>
-      <li><a href="{{ url_for('services') }}">Services</a></li>
-      <li><a href="{{ url_for('about') }}">About</a></li>
-      <li><a href="{{ url_for('contact') }}">Contact</a></li>
+      <ul class="right hide-on-med-and-down">
+        <li><a href="{{ url_for('home') }}">Home</a></li>
+        <li><a href="{{ url_for('projects') }}">Projects</a></li>
+        <li><a href="{{ url_for('services') }}">Services</a></li>
+        <li><a href="{{ url_for('about') }}">About</a></li>
+        <li><a href="{{ url_for('contact') }}">Contact</a></li>
 
-      {% if session.get("user") %}
-        {% if session.get("role") == "admin" %}
-          <li><a href="{{ url_for('admin_dashboard') }}">Admin</a></li>
+        {% if session.get("user") %}
+          {% if session.get("role") == "admin" %}
+            <li><a href="{{ url_for('admin_dashboard') }}">Admin</a></li>
+          {% else %}
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+          {% endif %}
+          <li><a href="{{ url_for('logout') }}">Logout</a></li>
         {% else %}
-          <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+          <li><a href="{{ url_for('login') }}">Login</a></li>
+          <li><a href="{{ url_for('register') }}">Register</a></li>
         {% endif %}
-        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <ul class="sidenav" id="mobile-menu">
+    <li><a href="{{ url_for('home') }}">Home</a></li>
+    <li><a href="{{ url_for('projects') }}">Projects</a></li>
+    <li><a href="{{ url_for('services') }}">Services</a></li>
+    <li><a href="{{ url_for('about') }}">About</a></li>
+    <li><a href="{{ url_for('contact') }}">Contact</a></li>
+    <li class="divider"></li>
+    {% if session.get("user") %}
+      {% if session.get("role") == "admin" %}
+        <li><a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a></li>
       {% else %}
-        <li><a href="{{ url_for('login') }}">Login</a></li>
-        <li><a href="{{ url_for('register') }}">Register</a></li>
+        <li><a href="{{ url_for('dashboard') }}">My Dashboard</a></li>
       {% endif %}
-    </ul>
+      <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    {% else %}
+      <li><a href="{{ url_for('login') }}">Login</a></li>
+      <li><a href="{{ url_for('register') }}">Register</a></li>
+    {% endif %}
+  </ul>
+
+  <main class="container">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="card-panel teal white-text" style="margin-top: 20px;">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}
+    {% endblock %}
+  </main>
+
+  <footer class="page-footer blue darken-3" style="margin-top: 20px;">
+    <div class="footer-copyright">
+      <div class="container center">
+        © 2026 Precision Drafting & Engineering
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Inicializuoti mobiliąją navigaciją
+      var sidenavs = document.querySelectorAll('.sidenav');
+      M.Sidenav.init(sidenavs);
+      
+      // Inicializuoti formų pasirinkimus (jei naudojate select)
+      var selects = document.querySelectorAll('select');
+      M.FormSelect.init(selects);
+    });
+  </script>
+</body>
+</html>
