@@ -199,6 +199,24 @@ def admin_dashboard():
     messages = list(mongo.db.contact_messages.find().sort("created", -1))
     return render_template("admin.html", orders=orders, users=users, messages=messages)
 
+@app.route("/admin/update_order/<order_id>", methods=["POST"])
+@admin_required
+def update_order(order_id):
+    status = request.form.get("status")
+    progress = request.form.get("progress")
+
+    mongo.db.orders.update_one(
+        {"_id": ObjectId(order_id)},
+        {"$set": {
+            "status": status,
+            "progress": int(progress)
+        }}
+    )
+
+    flash("Order updated successfully")
+    return redirect(url_for("admin_dashboard"))
+
+
 @app.route("/admin/delete_order/<order_id>", methods=["POST"])
 @admin_required
 def admin_delete_order(order_id):
