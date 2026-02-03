@@ -11,6 +11,11 @@ from flask_mail import Mail, Message
 if os.path.exists("env.py"):
     import env
 
+#testas
+@app.route("/test")
+def test():
+    return "<h1>FLASK VEIKIA</h1>"
+
 # ------------------- APP SETUP -------------------
 app = Flask(__name__)
 
