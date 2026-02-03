@@ -1,97 +1,92 @@
 {% extends "base.html" %}
-
 {% block content %}
 
+<div class="section">
+    <h4>Admin Dashboard – Communications</h4>
 
+    <div class="card blue lighten-5">
+        <div class="card-content">
+            <span class="card-title">Client Messages</span>
+            <div id="chat-window" style="height: 300px; overflow-y: auto; background: white; padding: 15px; border: 1px solid #bbdefb; border-radius: 5px; margin-bottom: 20px;">
+                {% for msg in messages %}
+                    <div style="margin-bottom: 10px; border-bottom: 1px solid #eee;">
+                        <span class="{% if msg['from'] == session['user'] %}blue-text{% else %}red-text{% endif %}">
+                            <strong>{{ msg['from'] }}</strong>
+                        </span>
+                        <span class="grey-text" style="font-size: 0.8rem;"> to {{ msg['to'] }}:</span>
+                        <p style="margin: 5px 0; padding: 5px; background: #f9f9f9;">{{ msg.text }}</p>
+                    </div>
+                {% else %}
+                    <p class="grey-text center">No messages found in database.</p>
+                {% endfor %}
+            </div>
 
-<h4>Admin Panel – Orders</h4>
+            <form method="POST" action="{{ url_for('send_message') }}">
+                <div class="row" style="margin-bottom: 0;">
+                    <div class="input-field col s12 m4">
+                        <select name="to" required class="browser-default" style="display: block !important;">
+                            <option value="" disabled selected>Select Client</option>
+                            {% for user in users %}
+                                <option value="{{ user.username }}">{{ user.username }}</option>
+                            {% endfor %}
+                            <option value="all_clients">ALL CLIENTS</option>
+                        </select>
+                    </div>
+                    <div class="input-field col s12 m6">
+                        <input type="text" name="text" placeholder="Type your reply..." required>
+                    </div>
+                    <div class="input-field col s12 m2">
+                        <button class="btn blue darken-2 col s12">Send</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
+    <div class="divider" style="margin: 30px 0;"></div>
 
+    <h4>Orders</h4>
+    {% for order in orders %}
+    <div class="card">
+        <div class="card-content">
+            <p><strong>Client:</strong> {{ order.clientno }}</p>
+            <form method="POST" action="{{ url_for('update_order', order_id=order._id) }}">
+                <div class="input-field">
+                    <input type="text" name="status" value="{{ order.status }}">
+                    <label class="active">Status</label>
+                </div>
+                <div class="input-field">
+                    <input type="number" name="progress" min="0" max="100" value="{{ order.progress }}">
+                    <label class="active">Progress (%)</label>
+                </div>
+                <button class="btn green">Update</button>
+            </form>
+            <form method="POST" action="{{ url_for('admin_delete_order', order_id=order._id) }}" style="margin-top: 10px;">
+                <button class="btn red">Delete Order</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
 
-{% for order in orders %}
+    <div class="divider" style="margin: 30px 0;"></div>
 
-<div class="card">
-
-  <div class="card-content">
-
-    <p><strong>Client:</strong> {{ order.clientno }}</p> <!-- clientno, ne client -->
-
-
-
-    <form method="POST" action="{{ url_for('update_order', order_id=order._id) }}">
-
-      <div class="input-field">
-
-        <input type="text" name="status" value="{{ order.status }}">
-
-        <label class="active">Status</label>
-
-      </div>
-
-
-
-      <div class="input-field">
-
-        <input type="number" name="progress" min="0" max="100" value="{{ order.progress }}">
-
-        <label class="active">Progress (%)</label>
-
-      </div>
-
-
-
-      <button class="btn green">Update</button>
-
-    </form>
-
-
-
-    <form method="POST" action="{{ url_for('admin_delete_order', order_id=order._id) }}" style="margin-top: 10px;">
-
-      <button class="btn red">Delete Order</button>
-
-    </form>
-
-  </div>
-
+    <h4>Users</h4>
+    {% for user in users %}
+    <div class="card">
+        <div class="card-content">
+            <p><strong>Username:</strong> {{ user.username }} | <strong>Email:</strong> {{ user.email }}</p>
+            {% if user.role != "admin" %}
+            <form method="POST" action="{{ url_for('admin_delete_user', user_id=user._id) }}">
+                <button class="btn-small red">Delete User</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
 </div>
 
-{% endfor %}
-
-
-
-<h4>Users</h4>
-
-{% for user in users %}
-
-<div class="card">
-
-  <div class="card-content">
-
-    <p><strong>Username:</strong> {{ user.username }}</p>
-
-    <p><strong>Email:</strong> {{ user.email }}</p>
-
-    <p><strong>Role:</strong> {{ user.role }}</p>
-
-
-
-    {% if user.role != "admin" %}
-
-    <form method="POST" action="{{ url_for('admin_delete_user', user_id=user._id) }}">
-
-      <button class="btn red">Delete User</button>
-
-    </form>
-
-    {% endif %}
-
-  </div>
-
-</div>
-
-{% endfor %}
-
-
-
+<script>
+    var objDiv = document.getElementById("chat-window");
+    if(objDiv) objDiv.scrollTop = objDiv.scrollHeight;
+</script>
 {% endblock %}
