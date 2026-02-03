@@ -195,57 +195,29 @@ def delete_order(order_id):
 @admin_required
 def admin_dashboard():
     orders = list(mongo.db.orders.find())
-    users = list(mongo.db.users.find())
-    # All messages
-    messages = list(mongo.db.contact_messages.find().sort("created", -1))
+    # Svarbu: paimame tik tuos, kurie nėra adminai, kad rodytų select meniu
+    users = list(mongo.db.users.find({"role": "client"}))
+    
+    # Sort(created, 1) rodo chronologiškai: sena -> nauja (kaip chat'e)
+    messages = list(mongo.db.contact_messages.find().sort("created", 1))
+    
     return render_template("admin.html", orders=orders, users=users, messages=messages)
 
-@app.route("/admin/update_order/<order_id>", methods=["POST"])
-@admin_required
-def update_order(order_id):
-    status = request.form.get("status")
-    progress = request.form.get("progress")
-
-    mongo.db.orders.update_one(
-        {"_id": ObjectId(order_id)},
-        {"$set": {
-            "status": status,
-            "progress": int(progress)
-        }}
-    )
-
-    flash("Order updated successfully")
-    return redirect(url_for("admin_dashboard"))
-
-
-@app.route("/admin/delete_order/<order_id>", methods=["POST"])
-@admin_required
-def admin_delete_order(order_id):
-    mongo.db.orders.delete_one({"_id": ObjectId(order_id)})
-    mongo.db.contact_messages.delete_many({"order_id": order_id})
-    flash("Order and messages deleted")
-    return redirect(url_for("admin_dashboard"))
-
-@app.route("/admin/delete_user/<user_id>", methods=["POST"])
-@admin_required
-def admin_delete_user(user_id):
-    user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
-    if user:
-        mongo.db.orders.delete_many({"clientno": user["username"]})
-        mongo.db.users.delete_one({"_id": ObjectId(user_id)})
-        mongo.db.contact_messages.delete_many({"$or": [{"to": user["username"]}, {"from": user["username"]}]})
-        flash("User, orders and messages deleted")
-    return redirect(url_for("admin_dashboard"))
-
 # ------------------- MESSAGES -------------------
+
 @app.route("/send_message", methods=["POST"])
 @login_required
 def send_message():
+    # Jei žinutė bendra, order_id bus None arba "general"
     order_id = request.form.get("order_id") or "general"
     text = request.form.get("text")
     to_user = request.form.get("to")
 
-    # Admin sending to all clients
+    if not text:
+        flash("Message cannot be empty")
+        return redirect(request.referrer)
+
+    # Admino globali žinutė visiems
     if session.get("role") == "admin" and to_user == "all_clients":
         clients = list(mongo.db.users.find({"role": "client"}))
         for client in clients:
@@ -256,8 +228,9 @@ def send_message():
                 "order_id": order_id,
                 "created": datetime.utcnow()
             })
-        flash("Message sent to all clients!")
+        flash("Global message sent!")
     else:
+        # Standartinė žinutė (iš kliento adminui arba iš admino klientui)
         mongo.db.contact_messages.insert_one({
             "from": session["user"],
             "to": to_user,
@@ -268,21 +241,6 @@ def send_message():
         flash("Message sent!")
 
     return redirect(request.referrer or url_for("dashboard"))
-
-@app.route("/edit_message/<message_id>", methods=["POST"])
-@admin_required
-def edit_message(message_id):
-    new_text = request.form.get("text")
-    mongo.db.contact_messages.update_one({"_id": ObjectId(message_id)}, {"$set": {"text": new_text}})
-    flash("Message updated!")
-    return redirect(request.referrer or url_for("admin_dashboard"))
-
-@app.route("/delete_message/<message_id>", methods=["POST"])
-@admin_required
-def delete_message(message_id):
-    mongo.db.contact_messages.delete_one({"_id": ObjectId(message_id)})
-    flash("Message deleted!")
-    return redirect(request.referrer or url_for("admin_dashboard"))
 
 # ------------------- OTHER PAGES -------------------
 @app.route("/projects")
