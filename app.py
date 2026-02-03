@@ -11,7 +11,6 @@ from flask_mail import Mail, Message
 if os.path.exists("env.py"):
     import env
 
-
 # ------------------- APP SETUP -------------------
 app = Flask(__name__)
 
@@ -145,12 +144,10 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    # Fetch orders for this client
     orders = list(mongo.db.orders.find({"clientno": session["user"]}))
     orders_with_msgs = []
 
     for order in orders:
-        # Messages sent to this client OR sent by this client
         msgs = list(mongo.db.contact_messages.find({
             "$or": [
                 {"order_id": str(order["_id"]), "to": session["user"]},
@@ -195,32 +192,11 @@ def delete_order(order_id):
 @admin_required
 def admin_dashboard():
     orders = list(mongo.db.orders.find())
-    # Svarbu: paimame tik tuos, kurie nėra adminai, kad rodytų select meniu
     users = list(mongo.db.users.find({"role": "client"}))
-    
-    # Sort(created, 1) rodo chronologiškai: sena -> nauja (kaip chat'e)
     messages = list(mongo.db.contact_messages.find().sort("created", 1))
-    
     return render_template("admin.html", orders=orders, users=users, messages=messages)
 
-# ----------------Route for updating orders-------------
-
-@app.route("/update_order/<order_id>", methods=["POST"])
-@admin_required
-def update_order(order_id):
-    new_status = request.form.get("status")
-    if not new_status:
-        flash("Status cannot be empty")
-        return redirect(request.referrer)
-    
-    mongo.db.orders.update_one(
-        {"_id": ObjectId(order_id)},
-        {"$set": {"status": new_status}}
-    )
-    flash("Order status updated!")
-    return redirect(request.referrer or url_for("admin_dashboard"))
-
-
+# ------------------- UPDATE ORDERS -------------------
 @app.route("/update_order/<order_id>", methods=["POST"])
 @admin_required
 def update_order(order_id):
@@ -237,11 +213,9 @@ def update_order(order_id):
     return redirect(request.referrer or url_for("admin_dashboard"))
 
 # ------------------- MESSAGES -------------------
-
 @app.route("/send_message", methods=["POST"])
 @login_required
 def send_message():
-    # Jei žinutė bendra, order_id bus None arba "general"
     order_id = request.form.get("order_id") or "general"
     text = request.form.get("text")
     to_user = request.form.get("to")
@@ -250,7 +224,6 @@ def send_message():
         flash("Message cannot be empty")
         return redirect(request.referrer)
 
-    # Admino globali žinutė visiems
     if session.get("role") == "admin" and to_user == "all_clients":
         clients = list(mongo.db.users.find({"role": "client"}))
         for client in clients:
@@ -263,7 +236,6 @@ def send_message():
             })
         flash("Global message sent!")
     else:
-        # Standartinė žinutė (iš kliento adminui arba iš admino klientui)
         mongo.db.contact_messages.insert_one({
             "from": session["user"],
             "to": to_user,
