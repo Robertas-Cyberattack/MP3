@@ -1,7 +1,7 @@
 # Precision Drafting & Engineering Web Application
 ## (Robertas Sladkevicius)
 
-![Live website on desktop screen](static/images/live_web.png)
+![Live website on desktop screen](static/images/readme/live_web.png)
 ---
 
 ## Live Webpage
