@@ -6,7 +6,7 @@
 {% for order in orders %}
 <div class="card">
   <div class="card-content">
-    <p><strong>Client:</strong> {{ order.client }}</p>
+    <p><strong>Client:</strong> {{ order.clientno }}</p> <!-- clientno, ne client -->
 
     <form method="POST" action="{{ url_for('update_order', order_id=order._id) }}">
       <div class="input-field">
@@ -21,6 +21,27 @@
 
       <button class="btn green">Update</button>
     </form>
+
+    <form method="POST" action="{{ url_for('admin_delete_order', order_id=order._id) }}" style="margin-top: 10px;">
+      <button class="btn red">Delete Order</button>
+    </form>
+  </div>
+</div>
+{% endfor %}
+
+<h4>Users</h4>
+{% for user in users %}
+<div class="card">
+  <div class="card-content">
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Role:</strong> {{ user.role }}</p>
+
+    {% if user.role != "admin" %}
+    <form method="POST" action="{{ url_for('admin_delete_user', user_id=user._id) }}">
+      <button class="btn red">Delete User</button>
+    </form>
+    {% endif %}
   </div>
 </div>
 {% endfor %}

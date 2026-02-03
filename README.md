@@ -4,9 +4,7 @@
 ![Live website on desktop screen](static/images/readme/live_web.png)
 ---
 
-## Live Webpage
-https://flask-cad-app-f02f558dce17.herokuapp.com/
-
+[## Live Webpage](https://flask-cad-app-f02f558dce17.herokuapp.com/)
 ---
 
 ## Table of Content
@@ -32,6 +30,17 @@ https://flask-cad-app-f02f558dce17.herokuapp.com/
    ii. Frameworks & Tools  
 
 5. Features  
+   i. User registration and login
+   ii. Role-based access (admin/user)
+   iii. Order upload and management
+   iv. Progress tracking
+   v. Admin dashboards(Users and Order)
+   vi. Contact form
+   vii. Email notifications (Sendgrid)
+   viii. Responsive design
+   ix. Secure password hashing
+   x. CRUD functionality
+   xi. Communication between admin and client
 
 6. Testing  
    i. HTML Validation  
@@ -162,6 +171,7 @@ Wireframes were created for:
 - HTML  
 - CSS  
 - Python  
+- JavaScript
 
 ### ii. Frameworks & Tools
 - Flask  
@@ -230,8 +240,6 @@ Embedded Google Maps tested on contact page; map loads correctly and markers dis
 
 ### xi. Python
 Python backend tested for all routes, database operations, and authentication; no errors found during execution.
-
-## 7. Bugs
 
 ## 7. Bugs
 
