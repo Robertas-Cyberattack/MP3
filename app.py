@@ -203,6 +203,39 @@ def admin_dashboard():
     
     return render_template("admin.html", orders=orders, users=users, messages=messages)
 
+# ----------------Route for updating orders-------------
+
+@app.route("/update_order/<order_id>", methods=["POST"])
+@admin_required
+def update_order(order_id):
+    new_status = request.form.get("status")
+    if not new_status:
+        flash("Status cannot be empty")
+        return redirect(request.referrer)
+    
+    mongo.db.orders.update_one(
+        {"_id": ObjectId(order_id)},
+        {"$set": {"status": new_status}}
+    )
+    flash("Order status updated!")
+    return redirect(request.referrer or url_for("admin_dashboard"))
+
+
+@app.route("/update_order/<order_id>", methods=["POST"])
+@admin_required
+def update_order(order_id):
+    new_status = request.form.get("status")
+    if not new_status:
+        flash("Status cannot be empty")
+        return redirect(request.referrer)
+    
+    mongo.db.orders.update_one(
+        {"_id": ObjectId(order_id)},
+        {"$set": {"status": new_status}}
+    )
+    flash("Order status updated!")
+    return redirect(request.referrer or url_for("admin_dashboard"))
+
 # ------------------- MESSAGES -------------------
 
 @app.route("/send_message", methods=["POST"])
