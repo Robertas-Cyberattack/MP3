@@ -24,10 +24,7 @@ app.config["MAIL_DEFAULT_SENDER"] = "robertas.sladkevicius@gmail.com"
 mail = Mail(app)
 
 # MongoDB setup
-app.config["MONGO_URI"] = os.environ.get(
-    "MONGO_URI",
-    "mongodb+srv://robertsladkevicius_db_user1:user1Milijonas2030@cadcluster.5ffsvzf.mongodb.net/CADDB?retryWrites=true&w=majority"
-)
+app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
 mongo = PyMongo(app)
 
 # Secret key & uploads
