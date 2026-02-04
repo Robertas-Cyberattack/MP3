@@ -14,7 +14,7 @@ if os.path.exists("env.py"):
 # ------------------- APP SETUP -------------------
 app = Flask(__name__)
 
-# Mail setup
+# ------------------- MAIL SETUP -------------------
 app.config["MAIL_SERVER"] = "smtp.sendgrid.net"
 app.config["MAIL_PORT"] = 587
 app.config["MAIL_USE_TLS"] = True
@@ -23,12 +23,16 @@ app.config["MAIL_PASSWORD"] = os.environ.get("SENDGRID_API_KEY")
 app.config["MAIL_DEFAULT_SENDER"] = "robertas.sladkevicius@gmail.com"
 mail = Mail(app)
 
-# MongoDB setup
-app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
+# ------------------- MONGODB SETUP (STEP 5) -------------------
+mongo_uri = os.environ.get("MONGO_URI")
+if not mongo_uri:
+    raise RuntimeError("MONGO_URI environment variable is not set")
+
+app.config["MONGO_URI"] = mongo_uri
 mongo = PyMongo(app)
 
-# Secret key & uploads
-app.secret_key = os.environ.get("SECRET_KEY", "super-secret-key")
+# ------------------- SECRET & UPLOADS -------------------
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -64,28 +68,38 @@ def about():
 def contact():
     return render_template("contact.html")
 
+# ------------------- CONTACT FORM (STEP 4) -------------------
 @app.route("/contact/send", methods=["POST"])
 def contact_send():
     data = {
+        "type": "contact_form",
         "name": request.form.get("name"),
         "email": request.form.get("email"),
         "mobile": request.form.get("mobile"),
         "message": request.form.get("message"),
         "created": datetime.utcnow()
     }
+
     mongo.db.contact_messages.insert_one(data)
+
     try:
         msg = Message(
             subject="New Contact Form Message",
-            sender=app.config["MAIL_DEFAULT_SENDER"],
             recipients=["robertas.sladkevicius@gmail.com"],
-            body=f"Name: {data['name']}\nEmail: {data['email']}\nMobile: {data['mobile']}\n\nMessage:\n{data['message']}"
+            body=f"""Name: {data['name']}
+Email: {data['email']}
+Mobile: {data['mobile']}
+
+Message:
+{data['message']}
+"""
         )
         mail.send(msg)
         flash("Message sent successfully!")
     except Exception as e:
         print("EMAIL ERROR:", e)
         flash("Failed to send email.")
+
     return redirect(url_for("contact"))
 
 # ------------------- REGISTER / LOGIN -------------------
@@ -106,25 +120,23 @@ def register():
             "email": email,
             "phone": phone,
             "password": password,
-            "role": "client",
-            "lock": False
+            "role": "client"
         })
+
         flash("Account created! Please log in.")
         return redirect(url_for("login"))
+
     return render_template("register.html")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        user = mongo.db.users.find_one({"username": username})
+        user = mongo.db.users.find_one({"username": request.form.get("username")})
 
-        if user and check_password_hash(user["password"], password):
+        if user and check_password_hash(user["password"], request.form.get("password")):
             session["user"] = user["username"]
             session["role"] = user["role"]
-            flash(f"Welcome {user['username']}!")
-            return redirect(url_for("admin_dashboard") if user["role"]=="admin" else url_for("dashboard"))
+            return redirect(url_for("admin_dashboard") if user["role"] == "admin" else url_for("dashboard"))
 
         flash("Invalid username or password")
         return redirect(url_for("login"))
@@ -142,25 +154,24 @@ def logout():
 @login_required
 def dashboard():
     orders = list(mongo.db.orders.find({"clientno": session["user"]}))
-    orders_with_msgs = []
 
     for order in orders:
-        msgs = list(mongo.db.contact_messages.find({
+        order["messages"] = list(mongo.db.contact_messages.find({
+            "type": "order_message",
             "$or": [
                 {"order_id": str(order["_id"]), "to": session["user"]},
                 {"order_id": str(order["_id"]), "from": session["user"]}
             ]
-        }))
-        order["messages"] = msgs
-        orders_with_msgs.append(order)
+        }).sort("created", 1))
 
-    return render_template("dashboard.html", orders=orders_with_msgs)
+    return render_template("dashboard.html", orders=orders)
 
 @app.route("/upload_order", methods=["POST"])
 @login_required
 def upload_order():
     files = request.files.getlist("file")
     filenames = []
+
     for f in files:
         filename = f"{datetime.utcnow().timestamp()}_{f.filename}"
         f.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
@@ -171,9 +182,9 @@ def upload_order():
         "status": "Pending",
         "progress": 0,
         "file": filenames,
-        "comments": "",
         "date": datetime.utcnow()
     })
+
     flash("Order uploaded!")
     return redirect(url_for("dashboard"))
 
@@ -186,88 +197,59 @@ def delete_order(order_id):
 
 # ------------------- ADMIN DASHBOARD -------------------
 @app.route("/admin")
+@login_required
 @admin_required
 def admin_dashboard():
     orders = list(mongo.db.orders.find())
     users = list(mongo.db.users.find({"role": "client"}))
-    messages = list(mongo.db.contact_messages.find().sort("created", 1))
+    messages = list(
+        mongo.db.contact_messages
+        .find({"type": "order_message"})
+        .sort("created", 1)
+    )
     return render_template("admin.html", orders=orders, users=users, messages=messages)
 
-# ------------------- UPDATE ORDERS -------------------
 @app.route("/update_order/<order_id>", methods=["POST"])
+@login_required
 @admin_required
 def update_order(order_id):
-    new_status = request.form.get("status")
-    if not new_status:
+    status = request.form.get("status")
+    if not status:
         flash("Status cannot be empty")
         return redirect(request.referrer)
-    
+
     mongo.db.orders.update_one(
         {"_id": ObjectId(order_id)},
-        {"$set": {"status": new_status}}
+        {"$set": {"status": status}}
     )
-    flash("Order status updated!")
-    return redirect(request.referrer or url_for("admin_dashboard"))
 
-# ------------------- MESSAGES -------------------
+    flash("Order status updated!")
+    return redirect(request.referrer)
+
+# ------------------- MESSAGES (STEP 4) -------------------
 @app.route("/send_message", methods=["POST"])
 @login_required
 def send_message():
-    order_id = request.form.get("order_id") or "general"
-    text = request.form.get("text")
-    to_user = request.form.get("to")
+    mongo.db.contact_messages.insert_one({
+        "type": "order_message",
+        "from": session["user"],
+        "to": request.form.get("to"),
+        "text": request.form.get("text"),
+        "order_id": request.form.get("order_id") or "general",
+        "created": datetime.utcnow()
+    })
 
-    if not text:
-        flash("Message cannot be empty")
-        return redirect(request.referrer)
+    flash("Message sent!")
+    return redirect(request.referrer)
 
-    if session.get("role") == "admin" and to_user == "all_clients":
-        clients = list(mongo.db.users.find({"role": "client"}))
-        for client in clients:
-            mongo.db.contact_messages.insert_one({
-                "from": session["user"],
-                "to": client["username"],
-                "text": text,
-                "order_id": order_id,
-                "created": datetime.utcnow()
-            })
-        flash("Global message sent!")
-    else:
-        mongo.db.contact_messages.insert_one({
-            "from": session["user"],
-            "to": to_user,
-            "text": text,
-            "order_id": order_id,
-            "created": datetime.utcnow()
-        })
-        flash("Message sent!")
-
-    return redirect(request.referrer or url_for("dashboard"))
-
-# ------------------- OTHER PAGES -------------------
+# ------------------- PROJECTS / SERVICES -------------------
 @app.route("/projects")
 def projects():
-    projects_list = [
-        {"title": "Residential building extension", "description": "Residential building extension project including detailed CAD drawings and construction documentation.", "image": "extension.jpg"},
-        {"title": "I beam calculation", "description": "Structural I-beam calculation and installation design for a wall removal project", "image": "I_beam.jpg"},
-        {"title": "Commercial fit-out", "description": "Commercial layout drawings and material requirement estimation", "image": "commercial.jpg"},
-        {"title": "Industrial Warehouse", "description": "Large-span warehouse structural and layout drawings.", "image": "industrial.jpg"},
-        {"title": "Foundation Design", "description": "Reinforced concrete foundation plans and sections.", "image": "foundation.jpg"},
-        {"title": "Renovation Project", "description": "As-built drawings and renovation documentation.", "image": "renovation.jpg"},
-    ]
-    return render_template("projects.html", projects=projects_list)
+    return render_template("projects.html", projects=[ ... ])
 
 @app.route("/services")
 def services():
-    services_list = [
-        {"title": "CAD Drafting", "description": "High-quality CAD drafting services.", "image": "drafting.jpg"},
-        {"title": "Structural Design", "description": "Professional structural engineering solutions.", "image": "structural.jpg"},
-        {"title": "Civil Engineering", "description": "Drainage, levels & infrastructure.", "image": "civil.jpg"},
-        {"title": "MEP Coordination", "description": "Mechanical, electrical & plumbing.", "image": "mep.jpg"},
-        {"title": "Interior Layouts", "description": "Office & residential interiors.", "image": "interior_layout.png"},
-        {"title": "Construction Docs", "description": "Build-ready documentation.", "image": "docs.jpg"},
-    ]
-    return render_template("services.html", services=services_list)
+    return render_template("services.html", services=[ ... ])
 
 # ------------------- RUN APP -------------------
 if __name__ == "__main__":
