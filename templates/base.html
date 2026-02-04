@@ -9,36 +9,6 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-  <style>
-    /* PAGRINDINIS IŠDĖSTYMAS */
-    body { display: flex; min-height: 100vh; flex-direction: column; }
-    main { flex: 1 0 auto; }
-
-    /* HERO */
-    .hero { padding: 60px 20px; text-align: center; }
-
-    /* NAVBAR */
-    nav { height: 72px; line-height: 72px; z-index: 999; }
-    nav .brand-logo { font-size: 1.3rem; white-space: nowrap; }
-
-    /* Force burger visible on medium and below */
-    @media (max-width: 992px) {
-      .sidenav-trigger { display: block !important; }
-      nav ul.right { display: none !important; }
-    }
-
-    @media (max-width: 600px) {
-      nav { height: 64px; line-height: 64px; }
-      nav .brand-logo { font-size: 1.1rem; }
-    }
-
-    /* CARDS FIX */
-    .row.flex-row { display: flex; flex-wrap: wrap; margin-left: -8px; margin-right: -8px; }
-    .row.flex-row > .col { padding-left: 8px; padding-right: 8px; margin-bottom: 16px; display: flex; }
-    .row.flex-row .card { flex: 1 1 100%; display: flex; flex-direction: column; }
-    .row.flex-row .card .card-content { flex-grow: 1; text-align: center; }
-    .card-image img { width: 100%; height: 200px; object-fit: cover; }
-  </style>
 </head>
 <body class="site">
 
