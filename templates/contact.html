@@ -24,7 +24,10 @@
         <strong>Email:</strong> robertas.sladkevicius@gmail.com
       </p>
 
-      <div id="map" style="height:300px;"></div>
+      <div id="map" style="height:300px; width:100%; border-radius:10px;"></div>
+      <p id="mapError" class="grey-text" style="display:none; margin-top:10px;">
+        Map could not be loaded. Please check Google Maps API key/billing/restrictions.
+      </p>
     </div>
 
     <!-- Contact Form -->
@@ -61,18 +64,34 @@
   </div>
 </div>
 
+<script>
+  // Ensure callback exists globally for Google Maps
+  window.initMap = function() {
+    try {
+      var location = { lat: 51.024261, lng: -3.098756 };
+      var mapEl = document.getElementById("map");
+      if (!mapEl) return;
+
+      var map = new google.maps.Map(mapEl, {
+        zoom: 12,
+        center: location
+      });
+
+      new google.maps.Marker({ position: location, map: map });
+    } catch (e) {
+      var err = document.getElementById("mapError");
+      if (err) err.style.display = "block";
+      console.error("Google Maps init error:", e);
+    }
+  };
+
+  window.gm_authFailure = function() {
+    var err = document.getElementById("mapError");
+    if (err) err.style.display = "block";
+  };
+</script>
+
 <script async defer
   src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_key }}&callback=initMap"></script>
-
-<script>
-  function initMap() {
-    var location = { lat: 51.024261, lng: -3.098756 };
-    var map = new google.maps.Map(document.getElementById("map"), {
-      zoom: 12,
-      center: location
-    });
-    new google.maps.Marker({ position: location, map: map });
-  }
-</script>
 
 {% endblock %}
