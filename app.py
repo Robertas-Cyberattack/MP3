@@ -66,7 +66,7 @@ def about():
 
 @app.route("/contact")
 def contact():
-    return render_template("contact.html")
+    return render_template("contact.html", google_maps_key=app.config["GOOGLE_MAPS_KEY"])
 
 @app.route("/contact/send", methods=["POST"])
 def contact_send():
