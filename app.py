@@ -23,7 +23,7 @@ app.config["MAIL_PASSWORD"] = os.environ.get("SENDGRID_API_KEY")
 app.config["MAIL_DEFAULT_SENDER"] = "robertas.sladkevicius@gmail.com"
 mail = Mail(app)
 
-# ------------------- MONGODB SETUP (STEP 5) -------------------
+# ------------------- MONGODB SETUP -------------------
 mongo_uri = os.environ.get("MONGO_URI")
 if not mongo_uri:
     raise RuntimeError("MONGO_URI environment variable is not set")
@@ -68,7 +68,6 @@ def about():
 def contact():
     return render_template("contact.html")
 
-# ------------------- CONTACT FORM (STEP 4) -------------------
 @app.route("/contact/send", methods=["POST"])
 def contact_send():
     data = {
@@ -229,7 +228,7 @@ def update_order(order_id):
 #------------ Google maps ------------------
 app.config["GOOGLE_MAPS_KEY"] = os.environ.get("GOOGLE_MAPS_KEY")
 
-# ------------------- MESSAGES (STEP 4) -------------------
+# ------------------- MESSAGES -------------------
 @app.route("/send_message", methods=["POST"])
 @login_required
 def send_message():
@@ -249,24 +248,24 @@ def send_message():
 @app.route("/projects")
 def projects():
     projects_list = [
-        {"title": "Project 1", "description": "Short description 1", "image": "project1.jpg"},
-        {"title": "Project 2", "description": "Short description 2", "image": "project2.jpg"},
-        {"title": "Project 3", "description": "Short description 3", "image": "project3.jpg"},
-        {"title": "Project 4", "description": "Short description 4", "image": "project4.jpg"},
-        {"title": "Project 5", "description": "Short description 5", "image": "project5.jpg"},
-        {"title": "Project 6", "description": "Short description 6", "image": "project6.jpg"},
+        {"title": "Commercial Projects", "description": "Design and layout for retail, office, and mixed-use spaces.", "image": "commercial.jpg"},
+        {"title": "Industrial Facilities", "description": "Planning and structural support for factories, warehouses, and production units.", "image": "industrial.jpg"},
+        {"title": "Interior Layouts", "description": "Optimized interior design for functional and aesthetic spaces.", "image": "interior_layout.png"},
+        {"title": "Extensions", "description": "Seamless building expansions maintaining structural integrity.", "image": "extension.jpg"},
+        {"title": "Foundations & Structural Work", "description": "Detailed foundation design and load-bearing analysis.", "image": "foundation.jpg"},
+        {"title": "Renovations", "description": "Upgrading existing structures with modern engineering solutions.", "image": "renovation.jpg"},
     ]
     return render_template("projects.html", projects=projects_list)
 
 @app.route("/services")
 def services():
     services_list = [
-        {"title": "Service 1", "description": "Short description 1", "image": "service1.jpg"},
-        {"title": "Service 2", "description": "Short description 2", "image": "service2.jpg"},
-        {"title": "Service 3", "description": "Short description 3", "image": "service3.jpg"},
-        {"title": "Service 4", "description": "Short description 4", "image": "service4.jpg"},
-        {"title": "Service 5", "description": "Short description 5", "image": "service5.jpg"},
-        {"title": "Service 6", "description": "Short description 6", "image": "service6.jpg"},
+        {"title": "CAD Drafting", "description": "Accurate 2D and 3D technical drawings for all project types.", "image": "drafting.jpg"},
+        {"title": "Documentation", "description": "Complete project documentation, reports, and compliance files.", "image": "docs.jpg"},
+        {"title": "Civil Engineering", "description": "Site planning, grading, drainage, and infrastructure design.", "image": "civil.jpg"},
+        {"title": "MEP & Structural Design", "description": "Integrated mechanical, electrical, plumbing, and structural solutions.", "image": "mep.jpg"},
+        {"title": "I-Beam & Load Calculations", "description": "Structural calculations ensuring safety and efficiency.", "image": "I_beam.jpg"},
+        {"title": "Project Consultation", "description": "Expert advice from concept through construction execution.", "image": "structural.jpg"},
     ]
     return render_template("services.html", services=services_list)
 
