@@ -61,8 +61,8 @@
       <button class="btn blue">Send</button>
     </form>
 
-    <!-- DISPLAY MESSAGES FROM ADMIN -->
-    <h6>Messages from Admin</h6>
+    <!-- DISPLAY MESSAGES -->
+    <h6>Messages</h6>
     {% if order.messages %}
     {% for msg in order.messages %}
     <p><strong>{{ msg['from'] }}:</strong> {{ msg['text'] }}</p>
@@ -71,11 +71,10 @@
     <p class="grey-text">No messages yet.</p>
     {% endif %}
 
-
   </div>
 </div>
 {% else %}
 <p>No orders yet.</p>
 {% endfor %}
 
-{% endblock %} 
+{% endblock %}
