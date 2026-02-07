@@ -226,6 +226,11 @@ def update_order(order_id):
     flash("Order status updated!")
     return redirect(request.referrer)
 
+#------------ Google maps ------------------
+
+app.config["GOOGLE_MAPS_KEY"] = os.environ.get("GOOGLE_MAPS_KEY")
+
+
 # ------------------- MESSAGES (STEP 4) -------------------
 @app.route("/send_message", methods=["POST"])
 @login_required
