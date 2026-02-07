@@ -1,18 +1,28 @@
 import os
+
 from flask import Flask, render_template, redirect, request, session, url_for, flash
+
 from flask_pymongo import PyMongo
+
 from werkzeug.security import generate_password_hash, check_password_hash
+
 from bson.objectid import ObjectId
+
 from functools import wraps
+
 from datetime import datetime
+
 from flask_mail import Mail, Message
+
 
 # Load env vars
 if os.path.exists("env.py"):
     import env
 
+
 # ------------------- APP SETUP -------------------
 app = Flask(__name__)
+
 
 # ------------------- MAIL SETUP -------------------
 app.config["MAIL_SERVER"] = "smtp.sendgrid.net"
@@ -20,8 +30,9 @@ app.config["MAIL_PORT"] = 587
 app.config["MAIL_USE_TLS"] = True
 app.config["MAIL_USERNAME"] = "apikey"
 app.config["MAIL_PASSWORD"] = os.environ.get("SENDGRID_API_KEY")
-app.config["MAIL_DEFAULT_SENDER"] = "robertas.sladkevicius@gmail.com"
+app.config["MAIL_DEFAULT_SENDER"] = ("Precision Drafting & Engineering", "robertas.sladkevicius@gmail.com")
 mail = Mail(app)
+
 
 # ------------------- MONGODB SETUP -------------------
 mongo_uri = os.environ.get("MONGO_URI")
@@ -30,6 +41,7 @@ if not mongo_uri:
 
 app.config["MONGO_URI"] = mongo_uri
 mongo = PyMongo(app)
+
 
 # ------------------- SECRET & UPLOADS -------------------
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
@@ -40,6 +52,41 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 # Google Maps API Key
 app.config["GOOGLE_MAPS_KEY"] = os.environ.get("GOOGLE_MAPS_KEY")
 
+
+# ------------------- ENSURE ADMIN USER EXISTS -------------------
+def ensure_admin_user():
+    admin_username = os.environ.get("ADMIN_USERNAME")
+    admin_password = os.environ.get("ADMIN_PASSWORD")
+    admin_email = os.environ.get("ADMIN_EMAIL", "robertas.sladkevicius@gmail.com")
+
+    if not admin_username or not admin_password:
+        # If env not set, we do not create admin automatically.
+        return
+
+    existing = mongo.db.users.find_one({"username": admin_username})
+    if existing:
+        # Ensure role is admin
+        if existing.get("role") != "admin":
+            mongo.db.users.update_one({"_id": existing["_id"]}, {"$set": {"role": "admin"}})
+        return
+
+    mongo.db.users.insert_one({
+        "username": admin_username,
+        "email": admin_email,
+        "phone": "",
+        "password": generate_password_hash(admin_password),
+        "role": "admin"
+    })
+
+
+# Run once at startup
+with app.app_context():
+    try:
+        ensure_admin_user()
+    except Exception as e:
+        print("ADMIN SEED ERROR:", e)
+
+
 # ------------------- DECORATORS -------------------
 def login_required(f):
     @wraps(f)
@@ -48,6 +95,7 @@ def login_required(f):
             return redirect(url_for("login"))
         return f(*args, **kwargs)
     return wrap
+
 
 def admin_required(f):
     @wraps(f)
@@ -58,19 +106,23 @@ def admin_required(f):
         return f(*args, **kwargs)
     return wrap
 
+
 # ------------------- ROUTES -------------------
 @app.route("/")
 def home():
     return render_template("home.html")
 
+
 @app.route("/about")
 def about():
     return render_template("about.html")
+
 
 @app.route("/contact")
 def contact():
     # pass google maps key to template
     return render_template("contact.html", google_maps_key=app.config["GOOGLE_MAPS_KEY"])
+
 
 @app.route("/contact/send", methods=["POST"])
 def contact_send():
@@ -101,9 +153,10 @@ Message:
         flash("Message sent successfully!")
     except Exception as e:
         print("EMAIL ERROR:", e)
-        flash("Failed to send email.")
+        flash("Failed to send email. Check SENDGRID_API_KEY and verified sender in SendGrid.")
 
     return redirect(url_for("contact"))
+
 
 # ------------------- REGISTER / LOGIN -------------------
 @app.route("/register", methods=["GET", "POST"])
@@ -118,6 +171,7 @@ def register():
             flash("Username already exists")
             return redirect(url_for("register"))
 
+        # Default role is client
         mongo.db.users.insert_one({
             "username": username,
             "email": email,
@@ -130,6 +184,7 @@ def register():
         return redirect(url_for("login"))
 
     return render_template("register.html")
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -146,11 +201,13 @@ def login():
 
     return render_template("login.html")
 
+
 @app.route("/logout")
 def logout():
     session.clear()
     flash("Logged out successfully.")
     return redirect(url_for("login"))
+
 
 # ------------------- DASHBOARD -------------------
 @app.route("/dashboard")
@@ -159,15 +216,19 @@ def dashboard():
     orders = list(mongo.db.orders.find({"clientno": session["user"]}))
 
     for order in orders:
-        order["messages"] = list(mongo.db.contact_messages.find({
-            "type": "order_message",
-            "$or": [
-                {"order_id": str(order["_id"]), "to": session["user"]},
-                {"order_id": str(order["_id"]), "from": session["user"]}
-            ]
-        }).sort("created", 1))
+        order["messages"] = list(
+            mongo.db.contact_messages.find({
+                "type": "order_message",
+                "order_id": str(order["_id"]),
+                "$or": [
+                    {"to": session["user"]},
+                    {"from": session["user"]}
+                ]
+            }).sort("created", 1)
+        )
 
     return render_template("dashboard.html", orders=orders)
+
 
 @app.route("/upload_order", methods=["POST"])
 @login_required
@@ -191,12 +252,14 @@ def upload_order():
     flash("Order uploaded!")
     return redirect(url_for("dashboard"))
 
+
 @app.route("/delete_order/<order_id>", methods=["POST"])
 @login_required
 def delete_order(order_id):
     mongo.db.orders.delete_one({"_id": ObjectId(order_id), "clientno": session["user"]})
     flash("Order deleted")
     return redirect(url_for("dashboard"))
+
 
 # ------------------- ADMIN DASHBOARD -------------------
 @app.route("/admin")
@@ -205,45 +268,121 @@ def delete_order(order_id):
 def admin_dashboard():
     orders = list(mongo.db.orders.find())
     users = list(mongo.db.users.find({"role": "client"}))
-    messages = list(
-        mongo.db.contact_messages
-        .find({"type": "order_message"})
-        .sort("created", 1)
-    )
-    return render_template("admin.html", orders=orders, users=users, messages=messages)
+
+    # attach messages per order
+    for order in orders:
+        order["messages"] = list(
+            mongo.db.contact_messages.find({
+                "type": "order_message",
+                "order_id": str(order["_id"])
+            }).sort("created", 1)
+        )
+
+    return render_template("admin.html", orders=orders, users=users)
+
 
 @app.route("/update_order/<order_id>", methods=["POST"])
 @login_required
 @admin_required
 def update_order(order_id):
     status = request.form.get("status")
-    if not status:
+    progress_raw = request.form.get("progress")
+
+    if status is None or status.strip() == "":
         flash("Status cannot be empty")
         return redirect(request.referrer)
 
+    update_doc = {"status": status}
+
+    if progress_raw is not None and progress_raw != "":
+        try:
+            progress_val = int(progress_raw)
+            if progress_val < 0:
+                progress_val = 0
+            if progress_val > 100:
+                progress_val = 100
+            update_doc["progress"] = progress_val
+        except ValueError:
+            flash("Progress must be a number between 0 and 100")
+            return redirect(request.referrer)
+
     mongo.db.orders.update_one(
         {"_id": ObjectId(order_id)},
-        {"$set": {"status": status}}
+        {"$set": update_doc}
     )
 
-    flash("Order status updated!")
+    flash("Order updated!")
     return redirect(request.referrer)
+
+
+@app.route("/admin/delete_order/<order_id>", methods=["POST"])
+@login_required
+@admin_required
+def admin_delete_order(order_id):
+    mongo.db.orders.delete_one({"_id": ObjectId(order_id)})
+    mongo.db.contact_messages.delete_many({"type": "order_message", "order_id": str(order_id)})
+    flash("Order deleted")
+    return redirect(request.referrer)
+
+
+@app.route("/admin/delete_user/<user_id>", methods=["POST"])
+@login_required
+@admin_required
+def admin_delete_user(user_id):
+    user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        flash("User not found")
+        return redirect(request.referrer)
+
+    username = user.get("username")
+
+    # Delete user's orders and messages related to those orders
+    user_orders = list(mongo.db.orders.find({"clientno": username}))
+    for o in user_orders:
+        mongo.db.contact_messages.delete_many({"type": "order_message", "order_id": str(o["_id"])})
+
+    mongo.db.orders.delete_many({"clientno": username})
+    mongo.db.users.delete_one({"_id": ObjectId(user_id)})
+
+    flash("User and their orders deleted")
+    return redirect(request.referrer)
+
 
 # ------------------- MESSAGES -------------------
 @app.route("/send_message", methods=["POST"])
 @login_required
 def send_message():
+    to_user = request.form.get("to")
+    text = request.form.get("text")
+    order_id = request.form.get("order_id") or "general"
+
+    if not to_user or not text:
+        flash("Message cannot be empty")
+        return redirect(request.referrer)
+
+    # Client security: client can only message "admin"
+    if session.get("role") != "admin" and to_user != "admin":
+        flash("You can only message admin.")
+        return redirect(request.referrer)
+
+    # Admin security: ensure target user exists when sending to client
+    if session.get("role") == "admin" and to_user != "admin":
+        if not mongo.db.users.find_one({"username": to_user}):
+            flash("Target user does not exist.")
+            return redirect(request.referrer)
+
     mongo.db.contact_messages.insert_one({
         "type": "order_message",
         "from": session["user"],
-        "to": request.form.get("to"),
-        "text": request.form.get("text"),
-        "order_id": request.form.get("order_id") or "general",
+        "to": to_user,
+        "text": text,
+        "order_id": str(order_id),
         "created": datetime.utcnow()
     })
 
     flash("Message sent!")
     return redirect(request.referrer)
+
 
 # ------------------- PROJECTS / SERVICES -------------------
 @app.route("/projects")
@@ -258,6 +397,7 @@ def projects():
     ]
     return render_template("projects.html", projects=projects_list)
 
+
 @app.route("/services")
 def services():
     services_list = [
@@ -269,6 +409,7 @@ def services():
         {"title": "Project Consultation", "description": "Expert advice from concept through construction execution.", "image": "structural.jpg"},
     ]
     return render_template("services.html", services=services_list)
+
 
 # ------------------- RUN APP -------------------
 if __name__ == "__main__":
