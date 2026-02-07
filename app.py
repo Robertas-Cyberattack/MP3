@@ -227,9 +227,7 @@ def update_order(order_id):
     return redirect(request.referrer)
 
 #------------ Google maps ------------------
-
 app.config["GOOGLE_MAPS_KEY"] = os.environ.get("GOOGLE_MAPS_KEY")
-
 
 # ------------------- MESSAGES (STEP 4) -------------------
 @app.route("/send_message", methods=["POST"])
@@ -250,11 +248,27 @@ def send_message():
 # ------------------- PROJECTS / SERVICES -------------------
 @app.route("/projects")
 def projects():
-    return render_template("projects.html", projects=[ ... ])
+    projects_list = [
+        {"title": "Project 1", "description": "Short description 1", "image": "project1.jpg"},
+        {"title": "Project 2", "description": "Short description 2", "image": "project2.jpg"},
+        {"title": "Project 3", "description": "Short description 3", "image": "project3.jpg"},
+        {"title": "Project 4", "description": "Short description 4", "image": "project4.jpg"},
+        {"title": "Project 5", "description": "Short description 5", "image": "project5.jpg"},
+        {"title": "Project 6", "description": "Short description 6", "image": "project6.jpg"},
+    ]
+    return render_template("projects.html", projects=projects_list)
 
 @app.route("/services")
 def services():
-    return render_template("services.html", services=[ ... ])
+    services_list = [
+        {"title": "Service 1", "description": "Short description 1", "image": "service1.jpg"},
+        {"title": "Service 2", "description": "Short description 2", "image": "service2.jpg"},
+        {"title": "Service 3", "description": "Short description 3", "image": "service3.jpg"},
+        {"title": "Service 4", "description": "Short description 4", "image": "service4.jpg"},
+        {"title": "Service 5", "description": "Short description 5", "image": "service5.jpg"},
+        {"title": "Service 6", "description": "Short description 6", "image": "service6.jpg"},
+    ]
+    return render_template("services.html", services=services_list)
 
 # ------------------- RUN APP -------------------
 if __name__ == "__main__":
