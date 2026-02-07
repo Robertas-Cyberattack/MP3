@@ -37,6 +37,9 @@ UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+# Google Maps API Key
+app.config["GOOGLE_MAPS_KEY"] = os.environ.get("GOOGLE_MAPS_KEY")
+
 # ------------------- DECORATORS -------------------
 def login_required(f):
     @wraps(f)
@@ -66,6 +69,7 @@ def about():
 
 @app.route("/contact")
 def contact():
+    # pass google maps key to template
     return render_template("contact.html", google_maps_key=app.config["GOOGLE_MAPS_KEY"])
 
 @app.route("/contact/send", methods=["POST"])
@@ -224,9 +228,6 @@ def update_order(order_id):
 
     flash("Order status updated!")
     return redirect(request.referrer)
-
-#------------ Google maps ------------------
-app.config["GOOGLE_MAPS_KEY"] = os.environ.get("GOOGLE_MAPS_KEY")
 
 # ------------------- MESSAGES -------------------
 @app.route("/send_message", methods=["POST"])
