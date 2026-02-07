@@ -5,43 +5,107 @@
   <div class="col s12">
     <h4 class="blue-text text-darken-2">Admin Dashboard</h4>
 
-    <!-- MESSAGES -->
+    <!-- USERS -->
     <div class="card white">
       <div class="card-content">
-        <span class="card-title">Messages</span>
-        <div style="height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px;">
-          {% if messages %}
-            {% for msg in messages %}
-              <p><strong>{{ msg.from }}:</strong> {{ msg.text }} <small class="grey-text">({{ msg.to }})</small></p>
-            {% endfor %}
-          {% else %}
-            <p class="grey-text">No messages yet.</p>
-          {% endif %}
-        </div>
+        <span class="card-title">Users</span>
 
-        <form method="POST" action="{{ url_for('send_message') }}">
-          <div class="input-field">
-            <input type="text" name="to" placeholder="To (username)" required>
-          </div>
-          <div class="input-field">
-            <input type="text" name="text" placeholder="Message content" required>
-          </div>
-          <button type="submit" class="btn blue">Send Reply</button>
-        </form>
+        {% if users %}
+          <ul class="collection">
+            {% for u in users %}
+              <li class="collection-item">
+                <strong>{{ u.username }}</strong> — {{ u.email }} — {{ u.phone }}
+                <form method="POST" action="{{ url_for('admin_delete_user', user_id=u._id) }}"
+                      style="display:inline; float:right;"
+                      onsubmit="return confirm('Delete this user and ALL their orders?');">
+                  <button class="btn-small red darken-2">
+                    <i class="material-icons left">delete</i>
+                    Delete
+                  </button>
+                </form>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="grey-text">No users found.</p>
+        {% endif %}
       </div>
     </div>
 
     <!-- ORDERS -->
     <h5>Orders</h5>
     {% for order in orders %}
-    <div class="card-panel">
-      <p><strong>Client:</strong> {{ order.clientno }} | <strong>Status:</strong> {{ order.status }}</p>
-      <form method="POST" action="{{ url_for('update_order', order_id=order._id) }}">
-        <div class="input-field">
-          <input type="text" name="status" placeholder="Status" value="{{ order.status }}">
+    <div class="card">
+      <div class="card-content">
+        <p>
+          <strong>Client:</strong> {{ order.clientno }}
+          | <strong>Status:</strong> {{ order.status }}
+          | <strong>Progress:</strong> {{ order.progress }}%
+        </p>
+
+        <div class="progress" style="margin-top:10px;">
+          <div class="determinate" style="width: {{ order.progress }}%"></div>
         </div>
-        <button type="submit" class="btn-small green">Update</button>
-      </form>
+
+        <!-- UPDATE ORDER -->
+        <form method="POST" action="{{ url_for('update_order', order_id=order._id) }}">
+          <div class="row" style="margin-top:10px;">
+            <div class="input-field col s12 m6">
+              <input type="text" name="status" placeholder="Status" value="{{ order.status }}">
+              <label class="active">Status</label>
+            </div>
+            <div class="input-field col s12 m6">
+              <input type="number" name="progress" placeholder="Progress %" value="{{ order.progress }}" min="0" max="100">
+              <label class="active">Progress (%)</label>
+            </div>
+          </div>
+          <button type="submit" class="btn-small green">
+            <i class="material-icons left">save</i>
+            Update
+          </button>
+        </form>
+
+        <!-- DELETE ORDER -->
+        <form method="POST" action="{{ url_for('admin_delete_order', order_id=order._id) }}"
+              style="margin-top:10px;"
+              onsubmit="return confirm('Delete this order permanently?');">
+          <button class="btn-small red darken-2">
+            <i class="material-icons left">delete</i>
+            Delete Order
+          </button>
+        </form>
+
+        <hr>
+
+        <!-- MESSAGES FOR THIS ORDER -->
+        <h6>Messages</h6>
+        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px;">
+          {% if order.messages %}
+            {% for msg in order.messages %}
+              <p>
+                <strong>{{ msg.from }}:</strong> {{ msg.text }}
+                <small class="grey-text">({{ msg.to }})</small>
+              </p>
+            {% endfor %}
+          {% else %}
+            <p class="grey-text">No messages yet.</p>
+          {% endif %}
+        </div>
+
+        <!-- SEND MESSAGE TO CLIENT -->
+        <form method="POST" action="{{ url_for('send_message') }}">
+          <input type="hidden" name="to" value="{{ order.clientno }}">
+          <input type="hidden" name="order_id" value="{{ order._id }}">
+          <div class="input-field">
+            <input type="text" name="text" placeholder="Message to client for this order" required>
+          </div>
+          <button type="submit" class="btn blue">
+            <i class="material-icons left">send</i>
+            Send to Client
+          </button>
+        </form>
+
+      </div>
     </div>
     {% else %}
       <p class="grey-text">No orders found.</p>
@@ -49,3 +113,5 @@
 
   </div>
 </div>
+
+{% endblock %}
