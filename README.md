@@ -4,7 +4,7 @@
 ![Live website on desktop screen](static/images/readme/live_web.png)
 ---
 
-[## Live Webpage](https://flask-cad-app-f02f558dce17.herokuapp.com/)
+[Live Webpage](https://flask-cad-app-f02f558dce17.herokuapp.com/)
 ---
 
 ## Table of Content
@@ -120,10 +120,11 @@ Users can quickly understand how to use the platform without unnecessary complex
 
 ---
 
-### i. Design Choices
+## 3. Design Choices
 The application consists of multiple pages with specific purposes:
 
 - **Home** – Short description of the app and welcome message  
+![Home website on desktop screen](static/images/readme/live_web.png)
 - **Projects** – Portfolio showcase of projects  
 - **Services** – Information about services offered  
 - **About** – Details about the company and application purpose  
