@@ -14,13 +14,41 @@
           <ul class="collection">
             {% for u in users %}
               <li class="collection-item">
-                <strong>{{ u.username }}</strong> — {{ u.email }} — {{ u.phone }}
+                <div>
+                  <strong>{{ u.username }}</strong>
+                  <div class="grey-text" style="margin-top:4px;">
+                    Email: {{ u.email }}<br>
+                    Phone: {{ u.phone }}
+                  </div>
+                </div>
+
+                <!-- EDIT USER -->
+                <form method="POST" action="{{ url_for('admin_edit_user', user_id=u._id) }}" style="margin-top:10px;">
+                  <div class="row" style="margin-bottom:0;">
+                    <div class="input-field col s12 m5" style="margin-top:0;">
+                      <input type="email" name="email" value="{{ u.email }}" required>
+                      <label class="active">Email</label>
+                    </div>
+                    <div class="input-field col s12 m5" style="margin-top:0;">
+                      <input type="text" name="phone" value="{{ u.phone }}" required>
+                      <label class="active">Phone</label>
+                    </div>
+                    <div class="col s12 m2" style="margin-top:10px;">
+                      <button class="btn-small green" type="submit" style="width:100%;">
+                        <i class="material-icons left">save</i>
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                </form>
+
+                <!-- DELETE USER -->
                 <form method="POST" action="{{ url_for('admin_delete_user', user_id=u._id) }}"
-                      style="display:inline; float:right;"
+                      style="margin-top:6px;"
                       onsubmit="return confirm('Delete this user and ALL their orders?');">
-                  <button class="btn-small red darken-2">
+                  <button class="btn-small red darken-2" type="submit">
                     <i class="material-icons left">delete</i>
-                    Delete
+                    Delete User
                   </button>
                 </form>
               </li>
@@ -69,7 +97,7 @@
         <form method="POST" action="{{ url_for('admin_delete_order', order_id=order._id) }}"
               style="margin-top:10px;"
               onsubmit="return confirm('Delete this order permanently?');">
-          <button class="btn-small red darken-2">
+          <button class="btn-small red darken-2" type="submit">
             <i class="material-icons left">delete</i>
             Delete Order
           </button>
@@ -77,15 +105,84 @@
 
         <hr>
 
+        <!-- ORDER COMMENTS (ADMIN ONLY) -->
+        <h6>Admin Comments (Client can see these)</h6>
+
+        <div style="border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:6px;">
+          {% if order.comments %}
+            {% for c in order.comments %}
+              <div style="margin-bottom:10px;">
+                <p style="margin:0;">
+                  <strong>Comment {{ loop.index }}:</strong> {{ c.text }}
+                  <small class="grey-text">({{ c.created }})</small>
+                </p>
+
+                <!-- EDIT COMMENT -->
+                <form method="POST" action="{{ url_for('admin_edit_comment', order_id=order._id, idx=loop.index0) }}" style="margin-top:6px;">
+                  <div class="input-field" style="margin-top:0;">
+                    <input type="text" name="text" value="{{ c.text }}" required>
+                    <label class="active">Edit comment</label>
+                  </div>
+                  <button class="btn-small blue" type="submit">
+                    <i class="material-icons left">edit</i>
+                    Update Comment
+                  </button>
+                </form>
+
+                <!-- DELETE COMMENT -->
+                <form method="POST" action="{{ url_for('admin_delete_comment', order_id=order._id, idx=loop.index0) }}"
+                      style="margin-top:6px;"
+                      onsubmit="return confirm('Delete this comment?');">
+                  <button class="btn-small red darken-2" type="submit">
+                    <i class="material-icons left">delete</i>
+                    Delete Comment
+                  </button>
+                </form>
+
+                <div class="divider" style="margin-top:10px;"></div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="grey-text" style="margin:0;">No comments yet.</p>
+          {% endif %}
+        </div>
+
+        <!-- ADD COMMENT -->
+        <form method="POST" action="{{ url_for('admin_add_comment', order_id=order._id) }}">
+          <div class="input-field">
+            <input type="text" name="text" placeholder="Add comment for client to see" required>
+          </div>
+          <button type="submit" class="btn blue">
+            <i class="material-icons left">add_comment</i>
+            Add Comment
+          </button>
+        </form>
+
+        <hr>
+
         <!-- MESSAGES FOR THIS ORDER -->
         <h6>Messages</h6>
-        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px;">
+        <div style="max-height: 220px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px;">
           {% if order.messages %}
             {% for msg in order.messages %}
-              <p>
+              <p style="margin-bottom:6px;">
                 <strong>{{ msg.from }}:</strong> {{ msg.text }}
                 <small class="grey-text">({{ msg.to }})</small>
               </p>
+
+              <!-- EDIT LAST MESSAGE (ADMIN) -->
+              {% if order.last_admin_message_id and msg._id|string == order.last_admin_message_id|string and msg.from == session.get("user") %}
+                <form method="POST" action="{{ url_for('edit_message', message_id=msg._id) }}" style="margin-bottom:14px;">
+                  <div class="input-field" style="margin-top:0;">
+                    <input type="text" name="text" value="{{ msg.text }}" required>
+                    <label class="active">Edit your last message</label>
+                  </div>
+                  <button class="btn-small blue" type="submit">
+                    <i class="material-icons left">edit</i>
+                    Update Message
+                  </button>
+                </form>
+              {% endif %}
             {% endfor %}
           {% else %}
             <p class="grey-text">No messages yet.</p>
