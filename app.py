@@ -60,12 +60,10 @@ def ensure_admin_user():
     admin_email = os.environ.get("ADMIN_EMAIL", "robertas.sladkevicius@gmail.com")
 
     if not admin_username or not admin_password:
-        # If env not set, we do not create admin automatically.
         return
 
     existing = mongo.db.users.find_one({"username": admin_username})
     if existing:
-        # Ensure role is admin
         if existing.get("role") != "admin":
             mongo.db.users.update_one({"_id": existing["_id"]}, {"$set": {"role": "admin"}})
         return
@@ -79,7 +77,6 @@ def ensure_admin_user():
     })
 
 
-# Run once at startup
 with app.app_context():
     try:
         ensure_admin_user()
@@ -120,7 +117,6 @@ def about():
 
 @app.route("/contact")
 def contact():
-    # pass google maps key to template
     return render_template("contact.html", google_maps_key=app.config["GOOGLE_MAPS_KEY"])
 
 
@@ -171,7 +167,6 @@ def register():
             flash("Username already exists")
             return redirect(url_for("register"))
 
-        # Default role is client
         mongo.db.users.insert_one({
             "username": username,
             "email": email,
@@ -216,16 +211,28 @@ def dashboard():
     orders = list(mongo.db.orders.find({"clientno": session["user"]}))
 
     for order in orders:
+        order_id_str = str(order["_id"])
+
         order["messages"] = list(
             mongo.db.contact_messages.find({
                 "type": "order_message",
-                "order_id": str(order["_id"]),
+                "order_id": order_id_str,
                 "$or": [
                     {"to": session["user"]},
                     {"from": session["user"]}
                 ]
             }).sort("created", 1)
         )
+
+        # last message sent by THIS client for this order (for edit)
+        last_sent = mongo.db.contact_messages.find_one(
+            {"type": "order_message", "order_id": order_id_str, "from": session["user"]},
+            sort=[("created", -1)]
+        )
+        order["last_sent_message_id"] = str(last_sent["_id"]) if last_sent else None
+
+        if "comments" not in order:
+            order["comments"] = []
 
     return render_template("dashboard.html", orders=orders)
 
@@ -241,13 +248,28 @@ def upload_order():
         f.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
         filenames.append(filename)
 
-    mongo.db.orders.insert_one({
+    order_doc = {
         "clientno": session["user"],
         "status": "Pending",
         "progress": 0,
         "file": filenames,
+        "comments": [],
         "date": datetime.utcnow()
-    })
+    }
+
+    result = mongo.db.orders.insert_one(order_doc)
+    new_order_id = str(result.inserted_id)
+
+    initial_message = request.form.get("initial_message", "").strip()
+    if initial_message:
+        mongo.db.contact_messages.insert_one({
+            "type": "order_message",
+            "from": session["user"],
+            "to": "admin",
+            "text": initial_message,
+            "order_id": new_order_id,
+            "created": datetime.utcnow()
+        })
 
     flash("Order uploaded!")
     return redirect(url_for("dashboard"))
@@ -269,14 +291,25 @@ def admin_dashboard():
     orders = list(mongo.db.orders.find())
     users = list(mongo.db.users.find({"role": "client"}))
 
-    # attach messages per order
     for order in orders:
+        order_id_str = str(order["_id"])
+
         order["messages"] = list(
             mongo.db.contact_messages.find({
                 "type": "order_message",
-                "order_id": str(order["_id"])
+                "order_id": order_id_str
             }).sort("created", 1)
         )
+
+        # last message sent by ADMIN for this order (for edit)
+        last_admin = mongo.db.contact_messages.find_one(
+            {"type": "order_message", "order_id": order_id_str, "from": session["user"]},
+            sort=[("created", -1)]
+        )
+        order["last_admin_message_id"] = str(last_admin["_id"]) if last_admin else None
+
+        if "comments" not in order:
+            order["comments"] = []
 
     return render_template("admin.html", orders=orders, users=users)
 
@@ -325,6 +358,26 @@ def admin_delete_order(order_id):
     return redirect(request.referrer)
 
 
+@app.route("/admin/edit_user/<user_id>", methods=["POST"])
+@login_required
+@admin_required
+def admin_edit_user(user_id):
+    email = request.form.get("email", "").strip()
+    phone = request.form.get("phone", "").strip()
+
+    if not email or not phone:
+        flash("Email and phone cannot be empty")
+        return redirect(request.referrer)
+
+    mongo.db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"email": email, "phone": phone}}
+    )
+
+    flash("User updated")
+    return redirect(request.referrer)
+
+
 @app.route("/admin/delete_user/<user_id>", methods=["POST"])
 @login_required
 @admin_required
@@ -336,7 +389,6 @@ def admin_delete_user(user_id):
 
     username = user.get("username")
 
-    # Delete user's orders and messages related to those orders
     user_orders = list(mongo.db.orders.find({"clientno": username}))
     for o in user_orders:
         mongo.db.contact_messages.delete_many({"type": "order_message", "order_id": str(o["_id"])})
@@ -345,6 +397,69 @@ def admin_delete_user(user_id):
     mongo.db.users.delete_one({"_id": ObjectId(user_id)})
 
     flash("User and their orders deleted")
+    return redirect(request.referrer)
+
+
+# ------------------- ORDER COMMENTS (ADMIN) -------------------
+@app.route("/admin/add_comment/<order_id>", methods=["POST"])
+@login_required
+@admin_required
+def admin_add_comment(order_id):
+    text = request.form.get("text", "").strip()
+    if not text:
+        flash("Comment cannot be empty")
+        return redirect(request.referrer)
+
+    mongo.db.orders.update_one(
+        {"_id": ObjectId(order_id)},
+        {"$push": {"comments": {"text": text, "created": datetime.utcnow().strftime("%Y-%m-%d %H:%M")}}}
+    )
+
+    flash("Comment added")
+    return redirect(request.referrer)
+
+
+@app.route("/admin/edit_comment/<order_id>/<int:idx>", methods=["POST"])
+@login_required
+@admin_required
+def admin_edit_comment(order_id, idx):
+    text = request.form.get("text", "").strip()
+    if not text:
+        flash("Comment cannot be empty")
+        return redirect(request.referrer)
+
+    order = mongo.db.orders.find_one({"_id": ObjectId(order_id)})
+    if not order or "comments" not in order or idx < 0 or idx >= len(order["comments"]):
+        flash("Comment not found")
+        return redirect(request.referrer)
+
+    mongo.db.orders.update_one(
+        {"_id": ObjectId(order_id)},
+        {"$set": {f"comments.{idx}.text": text}}
+    )
+
+    flash("Comment updated")
+    return redirect(request.referrer)
+
+
+@app.route("/admin/delete_comment/<order_id>/<int:idx>", methods=["POST"])
+@login_required
+@admin_required
+def admin_delete_comment(order_id, idx):
+    order = mongo.db.orders.find_one({"_id": ObjectId(order_id)})
+    if not order or "comments" not in order or idx < 0 or idx >= len(order["comments"]):
+        flash("Comment not found")
+        return redirect(request.referrer)
+
+    comments = order.get("comments", [])
+    comments.pop(idx)
+
+    mongo.db.orders.update_one(
+        {"_id": ObjectId(order_id)},
+        {"$set": {"comments": comments}}
+    )
+
+    flash("Comment deleted")
     return redirect(request.referrer)
 
 
@@ -360,12 +475,10 @@ def send_message():
         flash("Message cannot be empty")
         return redirect(request.referrer)
 
-    # Client security: client can only message "admin"
     if session.get("role") != "admin" and to_user != "admin":
         flash("You can only message admin.")
         return redirect(request.referrer)
 
-    # Admin security: ensure target user exists when sending to client
     if session.get("role") == "admin" and to_user != "admin":
         if not mongo.db.users.find_one({"username": to_user}):
             flash("Target user does not exist.")
@@ -381,6 +494,44 @@ def send_message():
     })
 
     flash("Message sent!")
+    return redirect(request.referrer)
+
+
+@app.route("/edit_message/<message_id>", methods=["POST"])
+@login_required
+def edit_message(message_id):
+    new_text = request.form.get("text", "").strip()
+    if not new_text:
+        flash("Message cannot be empty")
+        return redirect(request.referrer)
+
+    msg = mongo.db.contact_messages.find_one({"_id": ObjectId(message_id)})
+    if not msg:
+        flash("Message not found")
+        return redirect(request.referrer)
+
+    # Only author can edit
+    if msg.get("from") != session.get("user"):
+        flash("You can only edit your own messages.")
+        return redirect(request.referrer)
+
+    order_id = str(msg.get("order_id"))
+
+    # Must be the LAST message by this user in this order thread
+    last_msg = mongo.db.contact_messages.find_one(
+        {"type": "order_message", "order_id": order_id, "from": session.get("user")},
+        sort=[("created", -1)]
+    )
+    if not last_msg or str(last_msg["_id"]) != str(msg["_id"]):
+        flash("You can only edit your last message.")
+        return redirect(request.referrer)
+
+    mongo.db.contact_messages.update_one(
+        {"_id": ObjectId(message_id)},
+        {"$set": {"text": new_text, "edited": True, "edited_at": datetime.utcnow()}}
+    )
+
+    flash("Message updated")
     return redirect(request.referrer)
 
 
