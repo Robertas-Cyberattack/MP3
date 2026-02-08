@@ -53,6 +53,50 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["GOOGLE_MAPS_KEY"] = os.environ.get("GOOGLE_MAPS_KEY")
 
 
+# ------------------- HELPERS -------------------
+def norm_username(value: str) -> str:
+    return (value or "").strip().lower()
+
+
+def find_user_by_username_anycase(username_input: str):
+    """
+    Finds user by:
+      - username_lower (preferred for new data)
+      - fallback exact username (for older records)
+      - fallback case-insensitive regex on username (for older records)
+    """
+    u_lower = norm_username(username_input)
+    if not u_lower:
+        return None
+
+    user = mongo.db.users.find_one({"username_lower": u_lower})
+    if user:
+        return user
+
+    # Fallbacks for old data without username_lower
+    user = mongo.db.users.find_one({"username": username_input})
+    if user:
+        return user
+
+    # Case-insensitive fallback (still safe because we only match exact full string)
+    user = mongo.db.users.find_one({"username": {"$regex": f"^{username_input}$", "$options": "i"}})
+    return user
+
+
+def ensure_user_lower_fields(user_doc: dict):
+    """
+    For older user records, make sure username_lower exists.
+    Does not change displayed username.
+    """
+    if not user_doc:
+        return
+    if not user_doc.get("username_lower") and user_doc.get("username"):
+        mongo.db.users.update_one(
+            {"_id": user_doc["_id"]},
+            {"$set": {"username_lower": norm_username(user_doc["username"])}}
+        )
+
+
 # ------------------- ENSURE ADMIN USER EXISTS -------------------
 def ensure_admin_user():
     admin_username = os.environ.get("ADMIN_USERNAME")
@@ -62,14 +106,22 @@ def ensure_admin_user():
     if not admin_username or not admin_password:
         return
 
-    existing = mongo.db.users.find_one({"username": admin_username})
+    admin_lower = norm_username(admin_username)
+
+    existing = mongo.db.users.find_one({"username_lower": admin_lower})
+    if not existing:
+        # fallback for old DBs
+        existing = mongo.db.users.find_one({"username": {"$regex": f"^{admin_username}$", "$options": "i"}})
+
     if existing:
+        ensure_user_lower_fields(existing)
         if existing.get("role") != "admin":
             mongo.db.users.update_one({"_id": existing["_id"]}, {"$set": {"role": "admin"}})
         return
 
     mongo.db.users.insert_one({
         "username": admin_username,
+        "username_lower": admin_lower,
         "email": admin_email,
         "phone": "",
         "password": generate_password_hash(admin_password),
@@ -159,16 +211,26 @@ Message:
 def register():
     if request.method == "POST":
         username = request.form.get("username")
+        username_lower = norm_username(username)
+
         email = request.form.get("email")
         phone = request.form.get("phone")
         password = generate_password_hash(request.form.get("password"))
 
-        if mongo.db.users.find_one({"username": username}):
+        if not username_lower:
+            flash("Username cannot be empty")
+            return redirect(url_for("register"))
+
+        # Case-insensitive uniqueness check
+        if mongo.db.users.find_one({"username_lower": username_lower}) or mongo.db.users.find_one(
+            {"username": {"$regex": f"^{username}$", "$options": "i"}}
+        ):
             flash("Username already exists")
             return redirect(url_for("register"))
 
         mongo.db.users.insert_one({
             "username": username,
+            "username_lower": username_lower,
             "email": email,
             "phone": phone,
             "password": password,
@@ -184,10 +246,15 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        user = mongo.db.users.find_one({"username": request.form.get("username")})
+        username_input = request.form.get("username")
+        user = find_user_by_username_anycase(username_input)
+
+        if user:
+            ensure_user_lower_fields(user)
 
         if user and check_password_hash(user["password"], request.form.get("password")):
-            session["user"] = user["username"]
+            session["user"] = user["username"]  # display
+            session["user_lower"] = user.get("username_lower") or norm_username(user.get("username"))
             session["role"] = user["role"]
             return redirect(url_for("admin_dashboard") if user["role"] == "admin" else url_for("dashboard"))
 
@@ -208,16 +275,27 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    orders = list(mongo.db.orders.find({"clientno": session["user"]}))
+    user_lower = session.get("user_lower") or norm_username(session.get("user"))
+
+    # Support both old orders (clientno only) and new orders (clientno_lower)
+    orders = list(mongo.db.orders.find({
+        "$or": [
+            {"clientno": session["user"]},
+            {"clientno_lower": user_lower}
+        ]
+    }))
 
     for order in orders:
         order_id_str = str(order["_id"])
 
+        # messages: support new fields (from_lower/to_lower) and old fields (from/to)
         order["messages"] = list(
             mongo.db.contact_messages.find({
                 "type": "order_message",
                 "order_id": order_id_str,
                 "$or": [
+                    {"to_lower": user_lower},
+                    {"from_lower": user_lower},
                     {"to": session["user"]},
                     {"from": session["user"]}
                 ]
@@ -226,7 +304,14 @@ def dashboard():
 
         # last message sent by THIS client for this order (for edit)
         last_sent = mongo.db.contact_messages.find_one(
-            {"type": "order_message", "order_id": order_id_str, "from": session["user"]},
+            {
+                "type": "order_message",
+                "order_id": order_id_str,
+                "$or": [
+                    {"from_lower": user_lower},
+                    {"from": session["user"]}
+                ]
+            },
             sort=[("created", -1)]
         )
         order["last_sent_message_id"] = str(last_sent["_id"]) if last_sent else None
@@ -248,8 +333,11 @@ def upload_order():
         f.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
         filenames.append(filename)
 
+    user_lower = session.get("user_lower") or norm_username(session.get("user"))
+
     order_doc = {
         "clientno": session["user"],
+        "clientno_lower": user_lower,
         "status": "Pending",
         "progress": 0,
         "file": filenames,
@@ -265,7 +353,9 @@ def upload_order():
         mongo.db.contact_messages.insert_one({
             "type": "order_message",
             "from": session["user"],
+            "from_lower": user_lower,
             "to": "admin",
+            "to_lower": "admin",
             "text": initial_message,
             "order_id": new_order_id,
             "created": datetime.utcnow()
@@ -278,7 +368,16 @@ def upload_order():
 @app.route("/delete_order/<order_id>", methods=["POST"])
 @login_required
 def delete_order(order_id):
-    mongo.db.orders.delete_one({"_id": ObjectId(order_id), "clientno": session["user"]})
+    # allow delete old + new storage
+    user_lower = session.get("user_lower") or norm_username(session.get("user"))
+
+    mongo.db.orders.delete_one({
+        "_id": ObjectId(order_id),
+        "$or": [
+            {"clientno": session["user"]},
+            {"clientno_lower": user_lower}
+        ]
+    })
     flash("Order deleted")
     return redirect(url_for("dashboard"))
 
@@ -290,6 +389,12 @@ def delete_order(order_id):
 def admin_dashboard():
     orders = list(mongo.db.orders.find())
     users = list(mongo.db.users.find({"role": "client"}))
+
+    # Make sure users have username_lower (migration-like behavior)
+    for u in users:
+        ensure_user_lower_fields(u)
+
+    admin_lower = session.get("user_lower") or norm_username(session.get("user"))
 
     for order in orders:
         order_id_str = str(order["_id"])
@@ -303,7 +408,14 @@ def admin_dashboard():
 
         # last message sent by ADMIN for this order (for edit)
         last_admin = mongo.db.contact_messages.find_one(
-            {"type": "order_message", "order_id": order_id_str, "from": session["user"]},
+            {
+                "type": "order_message",
+                "order_id": order_id_str,
+                "$or": [
+                    {"from_lower": admin_lower},
+                    {"from": session["user"]}
+                ]
+            },
             sort=[("created", -1)]
         )
         order["last_admin_message_id"] = str(last_admin["_id"]) if last_admin else None
@@ -388,12 +500,23 @@ def admin_delete_user(user_id):
         return redirect(request.referrer)
 
     username = user.get("username")
+    username_lower = user.get("username_lower") or norm_username(username)
 
-    user_orders = list(mongo.db.orders.find({"clientno": username}))
+    user_orders = list(mongo.db.orders.find({
+        "$or": [
+            {"clientno": username},
+            {"clientno_lower": username_lower}
+        ]
+    }))
     for o in user_orders:
         mongo.db.contact_messages.delete_many({"type": "order_message", "order_id": str(o["_id"])})
 
-    mongo.db.orders.delete_many({"clientno": username})
+    mongo.db.orders.delete_many({
+        "$or": [
+            {"clientno": username},
+            {"clientno_lower": username_lower}
+        ]
+    })
     mongo.db.users.delete_one({"_id": ObjectId(user_id)})
 
     flash("User and their orders deleted")
@@ -467,27 +590,41 @@ def admin_delete_comment(order_id, idx):
 @app.route("/send_message", methods=["POST"])
 @login_required
 def send_message():
-    to_user = request.form.get("to")
+    to_user_input = request.form.get("to")
     text = request.form.get("text")
     order_id = request.form.get("order_id") or "general"
 
-    if not to_user or not text:
+    if not to_user_input or not text:
         flash("Message cannot be empty")
         return redirect(request.referrer)
 
-    if session.get("role") != "admin" and to_user != "admin":
+    from_lower = session.get("user_lower") or norm_username(session.get("user"))
+    to_lower = norm_username(to_user_input)
+
+    # Client security: client can only message admin
+    if session.get("role") != "admin" and to_lower != "admin":
         flash("You can only message admin.")
         return redirect(request.referrer)
 
-    if session.get("role") == "admin" and to_user != "admin":
-        if not mongo.db.users.find_one({"username": to_user}):
+    # Resolve recipient canonical username (case-insensitive)
+    if to_lower == "admin":
+        to_user = "admin"
+        to_lower = "admin"
+    else:
+        target = find_user_by_username_anycase(to_user_input)
+        if not target:
             flash("Target user does not exist.")
             return redirect(request.referrer)
+        ensure_user_lower_fields(target)
+        to_user = target["username"]
+        to_lower = target.get("username_lower") or norm_username(target.get("username"))
 
     mongo.db.contact_messages.insert_one({
         "type": "order_message",
         "from": session["user"],
+        "from_lower": from_lower,
         "to": to_user,
+        "to_lower": to_lower,
         "text": text,
         "order_id": str(order_id),
         "created": datetime.utcnow()
@@ -510,8 +647,11 @@ def edit_message(message_id):
         flash("Message not found")
         return redirect(request.referrer)
 
-    # Only author can edit
-    if msg.get("from") != session.get("user"):
+    current_lower = session.get("user_lower") or norm_username(session.get("user"))
+    msg_from_lower = msg.get("from_lower") or norm_username(msg.get("from"))
+
+    # Only author can edit (case-insensitive safe)
+    if msg_from_lower != current_lower:
         flash("You can only edit your own messages.")
         return redirect(request.referrer)
 
@@ -519,7 +659,14 @@ def edit_message(message_id):
 
     # Must be the LAST message by this user in this order thread
     last_msg = mongo.db.contact_messages.find_one(
-        {"type": "order_message", "order_id": order_id, "from": session.get("user")},
+        {
+            "type": "order_message",
+            "order_id": order_id,
+            "$or": [
+                {"from_lower": current_lower},
+                {"from": session.get("user")}
+            ]
+        },
         sort=[("created", -1)]
     )
     if not last_msg or str(last_msg["_id"]) != str(msg["_id"]):
