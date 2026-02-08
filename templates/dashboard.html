@@ -7,6 +7,7 @@
 <div class="card">
   <div class="card-content">
     <form method="POST" action="{{ url_for('upload_order') }}" enctype="multipart/form-data">
+
       <div class="file-field input-field">
         <div class="btn blue">
           <span>Upload Files</span>
@@ -16,6 +17,13 @@
           <input class="file-path validate" type="text">
         </div>
       </div>
+
+      <!-- initial message with order -->
+      <div class="input-field">
+        <textarea class="materialize-textarea" name="initial_message" placeholder="Add a message for admin (optional)"></textarea>
+        <label class="active">Message to Admin (optional)</label>
+      </div>
+
       <button class="btn blue darken-2">Submit Order</button>
     </form>
   </div>
@@ -39,7 +47,19 @@
     <p>📄 {{ f }}</p>
     {% endfor %}
 
+    <!-- COMMENTS FROM ADMIN -->
+    <hr>
+    <h6>Admin Comments</h6>
+    {% if order.comments %}
+      {% for c in order.comments %}
+        <p><strong>Comment:</strong> {{ c.text }}</p>
+      {% endfor %}
+    {% else %}
+      <p class="grey-text">No comments yet.</p>
+    {% endif %}
+
     <!-- DELETE BUTTON -->
+    <hr>
     <form method="POST" action="{{ url_for('delete_order', order_id=order._id) }}"
       onsubmit="return confirm('Delete this order permanently?');">
       <button class="btn red darken-2">
@@ -64,11 +84,27 @@
     <!-- DISPLAY MESSAGES -->
     <h6>Messages</h6>
     {% if order.messages %}
-    {% for msg in order.messages %}
-    <p><strong>{{ msg['from'] }}:</strong> {{ msg['text'] }}</p>
-    {% endfor %}
+      {% for msg in order.messages %}
+        <p style="margin-bottom:6px;">
+          <strong>{{ msg['from'] }}:</strong> {{ msg['text'] }}
+        </p>
+
+        <!-- EDIT LAST MESSAGE (CLIENT) -->
+        {% if order.last_sent_message_id and msg._id|string == order.last_sent_message_id|string and msg['from'] == session.get("user") %}
+          <form method="POST" action="{{ url_for('edit_message', message_id=msg._id) }}" style="margin-bottom:14px;">
+            <div class="input-field" style="margin-top:0;">
+              <input type="text" name="text" value="{{ msg['text'] }}" required>
+              <label class="active">Edit your last message</label>
+            </div>
+            <button class="btn-small blue" type="submit">
+              <i class="material-icons left">edit</i>
+              Update Message
+            </button>
+          </form>
+        {% endif %}
+      {% endfor %}
     {% else %}
-    <p class="grey-text">No messages yet.</p>
+      <p class="grey-text">No messages yet.</p>
     {% endif %}
 
   </div>
