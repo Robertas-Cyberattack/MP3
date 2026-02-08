@@ -656,7 +656,7 @@ def edit_message(message_id):
         return redirect(request.referrer)
 
     order_id = str(msg.get("order_id"))
-Dudley Zoo and Castl
+
     # Must be the LAST message by this user in this order thread
     last_msg = mongo.db.contact_messages.find_one(
         {
