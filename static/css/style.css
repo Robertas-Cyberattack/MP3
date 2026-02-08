@@ -19,8 +19,7 @@ nav .brand-logo {
 
 /* Responsive navbar adjustments */
 @media (max-width: 992px) {
-  /* On tablets/mobile: Materialize shows the hamburger on the left.
-     Center the logo so it never overlaps the menu icon. */
+  /* Center logo on tablet/mobile so it never overlaps the hamburger icon */
   nav .brand-logo {
     padding-left: 0;
     left: 50%;
@@ -34,7 +33,6 @@ nav .brand-logo {
     height: 64px;
     line-height: 64px;
   }
-
   nav .brand-logo {
     font-size: 1rem;
   }
@@ -42,20 +40,26 @@ nav .brand-logo {
 
 /* ------------------- CARDS (projects/services) ------------------- */
 /*
-  IMPORTANT:
-  Materialize grid uses its own .row/.col gutters and float-based layout.
-  Turning .row into display:flex and overriding margins/paddings can break responsiveness
-  (horizontal overflow + columns not stacking properly).
+  PROBLEM:
+  Materialize uses floats for the grid. If cards have different heights, the next row
+  can slide up under shorter columns → looks misaligned.
 
-  So:
-  - DO NOT change .row to flex
-  - Keep Materialize gutters
-  - Use flex ONLY on columns/cards to achieve equal-height cards
+  FIX:
+  Make only the special rows flex containers so wrapping is strict into rows.
+  IMPORTANT: do NOT override Materialize gutter margins/paddings (no custom -8px).
 */
 
-/* Make columns flex containers so cards can stretch to equal height */
+.row.flex-row,
+.row.equal-height {
+  display: flex;
+  flex-wrap: wrap;
+  /* keep Materialize default .row margins (it already handles gutters) */
+}
+
+/* Make columns flex items (and stop float behavior for these rows only) */
 .row.flex-row > .col,
 .row.equal-height > .col {
+  float: none;              /* prevent float "masonry" stacking */
   display: flex;
   flex-direction: column;
 }
