@@ -132,13 +132,13 @@ The application consists of multiple pages with specific purposes:
 - **About** – Details about the company and application purpose  
 ![About page on desktop screen](static/images/readme/about_pc.png)
 - **Contact** – Contact details, location, and a form for sending messages  
-![About page on desktop screen](static/images/readme/contact_pc.png)
+![Contact page on desktop screen](static/images/readme/contact_pc.png)
 - **Login** – User or admin login page  
-![About page on desktop screen](static/images/readme/login_pc.png)
+![Login page on desktop screen](static/images/readme/login_pc.png)
 - **Register** – User registration page  
-![About page on desktop screen](static/images/readme/register_pc.png)
+![Register page on desktop screen](static/images/readme/register_pc.png)
 - **Logout** (hidden) – Appears only when a user is logged in, to log out securely  
-![About page on desktop screen](static/images/readme/logout_pc.png)
+![Logout page on desktop screen](static/images/readme/logout_pc.png)
 - **Client Dashboard** (hidden) – Visible only to logged-in users; users can:  
 ![Client dashboard on desktop screen](static/images/readme/client_dashboard_pc.png)
   - Upload orders (**Create**)  
@@ -168,17 +168,20 @@ Raleway font is used throughout the application for readability and clarity.
 - Dashboard page: user orders and admin panel  
 - Contact page: user feedback and communication  
 - Fully responsive layout  
-![Admin dashboard(users) on desktop screen](static/images/readme/tablet_media.png)
-![Admin dashboard(users) on desktop screen](static/images/readme/mobile_media.png)
+![responsive - tablet](static/images/readme/tablet_media.png)
+![responsive - mobile](static/images/readme/mobile_media.png)
 
 ### v. Wireframes
 Wireframes were created for:
 - Desktop screen 
-![Admin dashboard(users) on desktop screen](static/images/readme/wireframe_pc.png)
+
+![Desktop screen](static/images/readme/wireframe_pc.png)
 - Tablet screen
-![Admin dashboard(users) on desktop screen](static/images/readme/wireframe_tablet.png)
+
+![Tablet screen](static/images/readme/wireframe_tablet.png)
 - Mobile screen
-![Admin dashboard(users) on desktop screen](static/images/readme/wireframe_mobile.png)
+
+![Mobile screen](static/images/readme/wireframe_mobile.png)
 ---
 
 ## 4. Technologies Used
@@ -222,19 +225,44 @@ Wireframes were created for:
 ## 6. Testing
 
 ### i. HTML Validation
-All pages validated using W3C HTML Validator with no errors.
+All pages validated using W3C HTML Validator with no critical errors.
+![HTML Validation for home page](static/images/readme/validation_home_html.png)
+
+![HTML Validation for services page](static/images/readme/validation_services_html.png)
+
+![HTML Validation for portfolio page](static/images/readme/validation_portfolio_html.png)
+
+![HTML Validation for about page](static/images/readme/validation_about_html.png)
+
+![HTML Validation for contact page](static/images/readme/validation_contact_html.png)
+
+![HTML Validation for admin page](static/images/readme/validation_admin_html.png)
+
+![HTML Validation for client dashbord page](static/images/readme/validation_client_dashboard_html.png)
+
+![HTML Validation for login page](static/images/readme/login.png)
+
+
+![HTML Validation for projects page](static/images/readme/validation_projects_html.png)
+
+![HTML Validation for register page](static/images/readme/validation_register_html.png)
 
 ### ii. CSS Validation
 CSS validated using W3C Jigsaw Validator with no errors.
+![CSS Validation](static/images/readme/css_jigsaw.png)
 
 ### iii. SendGrid
 Email functionality tested using SendGrid; all contact form emails were successfully delivered.
 
 ### iv. Accessibility
 Accessibility tested using WAVE Web Accessibility tool to ensure all content is perceivable, operable, and understandable.
+![Accessibility check with WAVE](static/images/readme/WAVE_check.png)
+
 
 ### v. Performance
 Performance tested using Google Lighthouse; pages score high in performance, accessibility, best practices, and SEO.
+![Performance tested using Google Lighthouse - desktop](static/images/readme/lighthouse_desktop.png)
+![Performance tested using Google Lighthouse - mobile](static/images/readme/lighthouse_mobile.png)
 
 ### vi. Device Testing
 Tested on multiple devices:
@@ -254,6 +282,8 @@ All user stories were tested and function as expected; both authenticated and gu
 
 ### ix. Heroku
 Application successfully deployed on Heroku; tested with live database connection and static files served correctly.
+![Herolu tested](static/images/readme/heroku_log.png)
+
 
 ### x. Google Map API
 Embedded Google Maps tested on contact page; map loads correctly and markers display as expected.
