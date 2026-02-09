@@ -124,21 +124,31 @@ Users can quickly understand how to use the platform without unnecessary complex
 The application consists of multiple pages with specific purposes:
 
 - **Home** – Short description of the app and welcome message  
-![Home website on desktop screen](static/images/readme/live_web.png)
+![Home page on desktop screen](static/images/readme/home_pc.png)
 - **Projects** – Portfolio showcase of projects  
+![Projects page on desktop screen](static/images/readme/projects_pc.png)
 - **Services** – Information about services offered  
+![Services page on desktop screen](static/images/readme/services_pc.png)
 - **About** – Details about the company and application purpose  
+![About page on desktop screen](static/images/readme/about_pc.png)
 - **Contact** – Contact details, location, and a form for sending messages  
+![About page on desktop screen](static/images/readme/contact_pc.png)
 - **Login** – User or admin login page  
+![About page on desktop screen](static/images/readme/login_pc.png)
 - **Register** – User registration page  
+![About page on desktop screen](static/images/readme/register_pc.png)
 - **Logout** (hidden) – Appears only when a user is logged in, to log out securely  
-- **User Dashboard** (hidden) – Visible only to logged-in users; users can:  
+![About page on desktop screen](static/images/readme/logout_pc.png)
+- **Client Dashboard** (hidden) – Visible only to logged-in users; users can:  
+![Client dashboard on desktop screen](static/images/readme/client_dashboard_pc.png)
   - Upload orders (**Create**)  
   - View their orders and progress (**Read**)  
   - Edit or update their orders (**Update**)  
   - Delete their own orders (**Delete**)  
   - Send messages to the admin (**Create**)  
 - **Admin Dashboard** (hidden) – Visible only to logged-in admins; admins can:  
+![Admin dashboard(orders) on desktop screen](static/images/readme/admin_dashboard_orders_pc.png)
+![Admin dashboard(users) on desktop screen](static/images/readme/admin_dashboard_users_pc.png)
   - Manage all users (**Create/Edit/Delete**)  
   - Manage all orders (**CRUD for all clients**)  
   - Track order progress for each client (**Read/Update**)  
@@ -157,6 +167,8 @@ Raleway font is used throughout the application for readability and clarity.
 - Dashboard page: user orders and admin panel  
 - Contact page: user feedback and communication  
 - Fully responsive layout  
+![Admin dashboard(users) on desktop screen](static/images/readme/tablet_media.png)
+![Admin dashboard(users) on desktop screen](static/images/readme/mobile_media.png)
 
 ### v. Wireframes
 Wireframes were created for:
@@ -181,7 +193,7 @@ Wireframes were created for:
 - SendGrid  
 - Flask-Mail  
 - Git & GitHub  
-- Lucid  
+- Balsamiq
 
 ---
 
@@ -194,8 +206,12 @@ Wireframes were created for:
 - Admin dashboard  
 - Contact form  
 - Email notifications  
+![Email notifications on desktop screen](static/images/readme/message_SendGrid_pc.png)
+![Email notifications on desktop screen](static/images/readme/message_received_gmail_pc.png)
+
 - Responsive design  
 - Secure password hashing  
+![Secure password hashing](static/images/readme/mongodb_users.png)
 - CRUD functionality  
 
 ---
@@ -283,7 +299,7 @@ https://flask-cad-app-f02f558dce17.herokuapp.com/
 ## 10. Acknowledgements
 
 - Code Institute community  
-- Mentors and tutors  
+- Mentor and tutor
 - Family support  
 
 ---
