@@ -146,9 +146,10 @@ The application consists of multiple pages with specific purposes:
   - Edit or update their orders (**Update**)  
   - Delete their own orders (**Delete**)  
   - Send messages to the admin (**Create**)  
-- **Admin Dashboard** (hidden) – Visible only to logged-in admins; admins can:  
+- **Admin Dashboard** (hidden) – Visible only to logged-in admins; admins can: 
+![Admin dashboard(users) on desktop screen](static/images/readme/admin_dashboard_users_pc.png) 
 ![Admin dashboard(orders) on desktop screen](static/images/readme/admin_dashboard_orders_pc.png)
-![Admin dashboard(users) on desktop screen](static/images/readme/admin_dashboard_users_pc.png)
+
   - Manage all users (**Create/Edit/Delete**)  
   - Manage all orders (**CRUD for all clients**)  
   - Track order progress for each client (**Read/Update**)  
@@ -172,10 +173,12 @@ Raleway font is used throughout the application for readability and clarity.
 
 ### v. Wireframes
 Wireframes were created for:
-- Desktop screens  
-- Tablet screens  
-- Mobile screens  
-
+- Desktop screen 
+![Admin dashboard(users) on desktop screen](static/images/readme/wireframe_pc.png)
+- Tablet screen
+![Admin dashboard(users) on desktop screen](static/images/readme/wireframe_tablet.png)
+- Mobile screen
+![Admin dashboard(users) on desktop screen](static/images/readme/wireframe_mobile.png)
 ---
 
 ## 4. Technologies Used
